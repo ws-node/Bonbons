@@ -1,9 +1,17 @@
+import { Request, Response } from "./core";
 
 export type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
+export interface IContext {
+    request: Request;
+    response: Response;
+}
+
 export interface IController {
+    context: IContext;
+    request: Request;
+    response: Response;
     routes: Array<IRoute>;
-    registerRoute(methodName: string, config: any): void;
 }
 
 export interface IRoute {
