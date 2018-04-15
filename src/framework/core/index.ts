@@ -2,8 +2,11 @@ import { BaseController, bindContext } from "./../controller";
 import { CreateExpress, Express } from "../metadata/core";
 import { InjectScope } from "../metadata/injectable";
 import { DIContainer } from "../di";
+import { IRoute } from "../metadata/controller";
 
-export class ExpressServer {
+class ExpressServer {
+
+    public static Create() { return new ExpressServer(); }
 
     private container = new DIContainer();
 
@@ -11,9 +14,10 @@ export class ExpressServer {
     public get app(): Express { return this._express; }
 
     private _listen: number;
-    private _ctrls: any[] = [];
+    private _ctrls: (typeof BaseController)[] = [];
 
-    public controller<T>(ctrl: T) {
+    public controller<T extends typeof BaseController>(ctrl: any) {
+        if (!ctrl) return this;
         this._ctrls.push(ctrl);
         return this;
     }
@@ -27,6 +31,18 @@ export class ExpressServer {
         return this;
     }
 
+    public scoped(provide?: any): ExpressServer;
+    public scoped(provide?: any, classType?: any): ExpressServer;
+    public scoped(provide?: any, classType?: any): ExpressServer {
+        return this.injectable(provide, classType, InjectScope.Scoped);
+    }
+
+    public singleton(provide?: any): ExpressServer;
+    public singleton(provide?: any, classType?: any): ExpressServer;
+    public singleton(provide?: any, classType?: any): ExpressServer {
+        return this.injectable(provide, classType, InjectScope.Singleton);
+    }
+
     public listen(port: number) {
         this._listen = port || 3000;
         return this;
@@ -34,19 +50,41 @@ export class ExpressServer {
 
     public run(work: () => void) {
         this.container.complete();
-        this._ctrls.forEach(ctrl => {
-            const result = new (<any>ctrl)(...this.container.resolveDeps(ctrl));
-            result.routes.forEach(
-                route => route.allowMethods.forEach(
-                    method => this._express[method.toLowerCase()](route.path, (req, rep) => {
-                        const instance = new (<any>ctrl)(...this.container.resolveDeps(ctrl));
-                        result[route.methodName].bind(bindContext(instance, req, rep))();
-                    })));
-        });
+        this._registerControllers();
         this._express.listen(this._listen, work);
+    }
+
+    private _registerControllers() {
+        this._ctrls.forEach(ctrl => ctrl.prototype.routes.forEach(route => this._registerRoutes(route, ctrl)));
+    }
+
+    private _createInstance<T extends typeof BaseController>(constor: T): T {
+        return new (<any>constor)(...this.container.resolveDeps(constor));
+    }
+
+    private _registerRoutes(route: IRoute, constructor: any) {
+        route.allowMethods.forEach(
+            method => {
+                let invoke: (path, fn) => void;
+                switch (method) {
+                    case "GET":
+                    case "POST":
+                    case "PUT":
+                    case "DELETE":
+                    case "PATCH":
+                    case "OPTIONS":
+                    case "HEAD": invoke = (...args: any[]) => this._express[method.toLowerCase()](...args); break;
+                    default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
+                }
+                if (!route.path) throw new Error(`invalid REST method path : the path of action '${route.methodName}' is empty.`);
+                console.log(route.path);
+                invoke(route.path, (req, rep) => {
+                    constructor.prototype[route.methodName].bind(bindContext(this._createInstance(constructor), req, rep))();
+                });
+            });
     }
 
 }
 
-// tslint:disable-next-line:variable-name
-export const Server = new ExpressServer();
+export { ExpressServer as Server };
+
