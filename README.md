@@ -5,6 +5,11 @@ This is an MVC framework based on node.js and express. The framework is created 
 
 The core features are under development. Currently, the dependency injection system is basically completed, the controller module is basically completed, and the GET method is also completed. **Other features are still developing**.
 
+## Installation
+```powershell
+npm install bonbons --save
+```
+
 ## How it works?
 #### 1. Create a service and register
 ```TypeScript
