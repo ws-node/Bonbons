@@ -79,8 +79,8 @@ function registerCompelete(meta: IControllerMetadata) {
         if (route.middleware && route.middleware.merge) {
             route.middleware.list = [...meta.middlewares, ...route.middleware.list];
         }
-        if (!route.middleware) {
-            route.middleware = { list: [...meta.middlewares], merge: true };
+        if (!route.middleware || !route.middleware.merge) {
+            route.middleware = { list: [...meta.middlewares], merge: false };
         }
     });
     return meta;
