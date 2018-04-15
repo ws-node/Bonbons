@@ -53,6 +53,17 @@ export class MainController extends BaseController {
         return new JsonResult({ value: "this is a api method with base : " });
     }
 
+    @Method("GET")
+    @Route("page", ["id", "select", "message"]) 
+    // provide query params name list to open static query feature
+    // example : localhost/api/page?id=123456&select=true&message=mmmmmm
+    public AnotherGET(id:number, select:boolean, message): JsonResult {
+        console.log(id); // "123456"
+        console.log(select); // true
+        console.log(message) // "mmmmmm" (string is the default type)
+        return new JsonResult({ value: "666666" });
+    }
+
 }
 
 ...
