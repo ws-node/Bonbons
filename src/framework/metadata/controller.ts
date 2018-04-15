@@ -2,7 +2,9 @@ import { Request, Response } from "./core";
 
 export type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
-export type IMidleware = (request: Request, response: Response, next?: () => void) => void;
+export type ICommonMidleware = (request: Request, response: Response, next?: () => void) => void;
+export type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
+export type IMidleware = ICommonMidleware | IErrorMiddleware;
 
 export interface IContext {
     request: Request;
