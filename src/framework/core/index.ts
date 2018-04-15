@@ -82,7 +82,6 @@ class ExpressServer {
                     default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
                 }
                 if (!route.path) throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
-                console.log(route.path);
                 const middlewares = (route.middleware && route.middleware.list) || [];
                 middlewares.push((req, rep: Response) => {
                     const result: IMethodResult | string = constructor.prototype[methodName].bind(bindContext(this._createInstance(constructor), req, rep))();

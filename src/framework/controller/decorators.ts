@@ -19,7 +19,6 @@ export function Controller(config?: string | IControllerConfig) {
         const prototype = target.prototype;
         const reflect = Reflection.GetControllerMetadata(prototype);
         Reflection.SetControllerMetadata(prototype, registerCompelete(registerPrefix(reflect, config)));
-        console.log(JSON.stringify(Reflection.GetControllerMetadata(prototype)));
     };
 }
 
