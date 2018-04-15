@@ -1,33 +1,12 @@
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
-const controller_1 = require("./controller");
-const reflect_1 = require("../metadata/reflect");
+const reflect_1 = require("../di/reflect");
 function Controller(config) {
     return function (target) {
         const prototype = target.prototype;
-        controller_1.registerPrefix(prototype, typeof config === "string" ? config : config && config.prefix);
-        const keys = Reflect.getMetadataKeys(prototype);
-        keys.forEach(key => Reflect.getMetadata(key, prototype).forEach(prop => {
-            switch (key) {
-                case reflect_1.CTOR_METHOD_META_KEY:
-                case reflect_1.CTOR_ROUTE_META_KEY:
-                    const { propertyKey } = prop, others = __rest(prop, ["propertyKey"]);
-                    controller_1.registerRoute(prototype, propertyKey, others);
-                    break;
-                default: break;
-            }
-        }));
-        controller_1.registerCompelete(prototype);
+        const reflect = reflect_1.Reflection.GetControllerMetadata(prototype);
+        reflect_1.Reflection.SetControllerMetadata(prototype, registerCompelete(registerPrefix(reflect, config)));
     };
 }
 exports.Controller = Controller;
@@ -37,9 +16,8 @@ exports.Controller = Controller;
  */
 function Method(...allowMethods) {
     return function (target, propertyKey) {
-        const values = Reflect.getMetadata(reflect_1.CTOR_METHOD_META_KEY, target) || [];
-        values.push({ propertyKey, allowMethods });
-        Reflect.defineMetadata(reflect_1.CTOR_METHOD_META_KEY, values, target);
+        const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { allowMethods }));
     };
 }
 exports.Method = Method;
@@ -49,10 +27,59 @@ exports.Method = Method;
  */
 function Route(path) {
     return function (target, propertyKey) {
-        const values = Reflect.getMetadata(reflect_1.CTOR_ROUTE_META_KEY, target) || [];
-        values.push({ propertyKey, path });
-        Reflect.defineMetadata(reflect_1.CTOR_ROUTE_META_KEY, values, target);
+        const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { path }));
     };
 }
 exports.Route = Route;
+function Middleware(middlewares, merge = true) {
+    return function (target, propertyKey) {
+        const isConstructor = !!target.prototype;
+        const prototype = isConstructor ? target.prototype : target;
+        const reflect = reflect_1.Reflection.GetControllerMetadata(prototype);
+        if (isConstructor) {
+            reflect.middlewares = middlewares;
+        }
+        else {
+            reroute(reflect, propertyKey, { middleware: { list: middlewares, merge } });
+        }
+        reflect_1.Reflection.SetControllerMetadata(prototype, reflect);
+    };
+}
+exports.Middleware = Middleware;
+function initRoutes(reflect, propertyKey) {
+    return reflect.router.routes[propertyKey] || (reflect.router.routes[propertyKey] = {});
+}
+function reroute(reflect, propertyKey, payload) {
+    Object.assign(initRoutes(reflect, propertyKey), payload);
+    return reflect;
+}
+/**
+ * Check and edit absolute route path, merge middlewares and all work done.
+ * @param ctrl controller prototype
+ */
+function registerCompelete(meta) {
+    Object.keys(meta.router.routes).map(key => meta.router.routes[key]).forEach(route => {
+        if (!(route.path || "").startsWith("/")) {
+            route.path = meta.router.prefix + route.path;
+        }
+        if (route.middleware && route.middleware.merge) {
+            route.middleware.list = [...meta.middlewares, ...route.middleware.list];
+        }
+        if (!route.middleware) {
+            route.middleware = { list: [...meta.middlewares], merge: true };
+        }
+    });
+    return meta;
+}
+/**
+ * Config controller prefix.
+ * @param ctrl controller prototype
+ * @param prefix
+ */
+function registerPrefix(meta, config) {
+    const prefix = typeof config === "string" ? config : config && config.prefix;
+    meta.router.prefix = ("/" + (prefix || "") + "/").replace("//", "/");
+    return meta;
+}
 //# sourceMappingURL=decorators.js.map

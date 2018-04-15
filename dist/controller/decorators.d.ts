@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { AllowMethod, IControllerConfig } from "../metadata/controller";
+import { AllowMethod, IControllerConfig, IMidleware } from "../metadata/controller";
 import { BaseController } from "./controller";
 /**
  * Define a controller with config. the config is used for route prefix and other features.
@@ -21,3 +21,4 @@ export declare function Method(...allowMethods: AllowMethod[]): <T extends BaseC
  * @param {string} path
  */
 export declare function Route(path: string): <T extends BaseController>(target: T, propertyKey: string) => void;
+export declare function Middleware(middlewares: Array<IMidleware>, merge?: boolean): <T extends BaseController | typeof BaseController>(target: any, propertyKey?: string) => void;

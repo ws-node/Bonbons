@@ -110,5 +110,54 @@ export class SuperService {
 // it works!
 ```
 
+4. Add middlewares for route or controller
+```TypeScript
+// first create middleware in pure function format.
+function middleware01(r, rs, next) {
+    console.log("123456");
+    next();
+}
+function middleware02(r, rs, next) {
+    console.log("555555");
+    next();
+}
+
+// then add it to method by decorator
+@Method("GET", "POST")
+@Route("index")
+@Middleware([middleware02])
+public ApiIndex(): JsonResult {
+    return new JsonResult({ value: this.sup.print() });
+}
+
+// this decorator is alse can be add in controller
+// the middlewares add to controller will add to all the registeres methods, but you can still rewrite this behavior.
+@Controller("api")
+@Middleware([middleware01])
+export class MainController extends BaseController {
+
+    constructor(private sup: SuperService) {
+        super();
+    }
+
+    @Method("GET")
+    @Route("/index")
+    // will extends controller middlewares list : [middleware01]
+    public GetIndex(): string {
+        return this.sup.print();
+    }
+
+    @Method("GET", "POST")
+    @Route("index")
+    @Middleware([middleware02], false) 
+    // merge:true(default), will extends controller middlewares list : [middleware01, middleware02]
+    // merge:false, will not extends controller middlewares list : [middleware02]
+    public ApiIndex(): JsonResult {
+        return new JsonResult({ value: this.sup.print() });
+    }
+
+}
+```
+
 **Still in developing...**
 

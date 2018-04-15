@@ -4,6 +4,7 @@ const controller_1 = require("./../controller");
 const core_1 = require("../metadata/core");
 const injectable_1 = require("../metadata/injectable");
 const di_1 = require("../di");
+const reflect_1 = require("../di/reflect");
 class ExpressServer {
     constructor() {
         this.container = new di_1.DIContainer();
@@ -41,12 +42,15 @@ class ExpressServer {
         this._express.listen(this._listen, work);
     }
     _registerControllers() {
-        this._ctrls.forEach(ctrl => ctrl.prototype.routes.forEach(route => this._registerRoutes(route, ctrl)));
+        this._ctrls.forEach(ctrl => {
+            const reflect = reflect_1.Reflection.GetControllerMetadata(ctrl.prototype);
+            const routes = Object.keys(reflect.router.routes).forEach(key => this._registerRoutes(reflect.router.routes[key], ctrl, key));
+        });
     }
     _createInstance(constor) {
         return new constor(...this.container.resolveDeps(constor));
     }
-    _registerRoutes(route, constructor) {
+    _registerRoutes(route, constructor, methodName) {
         route.allowMethods.forEach(method => {
             let invoke;
             switch (method) {
@@ -62,12 +66,13 @@ class ExpressServer {
                 default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
             }
             if (!route.path)
-                throw new Error(`invalid REST method path : the path of action '${route.methodName}' is empty.`);
-            console.log(route.path);
-            invoke(route.path, (req, rep) => {
-                const result = constructor.prototype[route.methodName].bind(controller_1.bindContext(this._createInstance(constructor), req, rep))();
+                throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
+            const middlewares = (route.middleware && route.middleware.list) || [];
+            middlewares.push((req, rep) => {
+                const result = constructor.prototype[methodName].bind(controller_1.bindContext(this._createInstance(constructor), req, rep))();
                 rep.send(result && result.toString());
             });
+            invoke(route.path, ...middlewares);
         });
     }
 }
