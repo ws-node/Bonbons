@@ -1,8 +1,8 @@
 import { BaseController, bindContext } from "./../controller";
-import { CreateExpress, Express } from "../metadata/core";
+import { CreateExpress, Express, Response } from "../metadata/core";
 import { InjectScope } from "../metadata/injectable";
 import { DIContainer } from "../di";
-import { IRoute } from "../metadata/controller";
+import { IRoute, IMethodResult } from "../metadata/controller";
 
 class ExpressServer {
 
@@ -78,8 +78,9 @@ class ExpressServer {
                 }
                 if (!route.path) throw new Error(`invalid REST method path : the path of action '${route.methodName}' is empty.`);
                 console.log(route.path);
-                invoke(route.path, (req, rep) => {
-                    constructor.prototype[route.methodName].bind(bindContext(this._createInstance(constructor), req, rep))();
+                invoke(route.path, (req, rep: Response) => {
+                    const result: IMethodResult | string = constructor.prototype[route.methodName].bind(bindContext(this._createInstance(constructor), req, rep))();
+                    rep.send(result && result.toString());
                 });
             });
     }

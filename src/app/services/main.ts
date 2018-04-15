@@ -1,5 +1,5 @@
-import { Injectabe } from "../../framework/injectable";
 import { UUID } from "../../framework/utils/uuid";
+import { Injectabe } from "./../../framework";
 
 export abstract class ABCService {
     public abstract getMessage(): string;
@@ -41,8 +41,6 @@ export class SuperService {
     }
 
     print() {
-        console.log(this.main);
-        console.log(this.sec);
         return "Hello World! " + this.main.getMessage();
     }
 

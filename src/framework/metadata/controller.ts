@@ -19,3 +19,11 @@ export interface IRoute {
     methodName: string;
     allowMethods: AllowMethod[];
 }
+
+export interface IControllerConfig {
+    prefix?: string;
+}
+
+export interface IMethodResult {
+    toString(): string;
+}
