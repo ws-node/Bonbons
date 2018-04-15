@@ -1,5 +1,4 @@
 import "reflect-metadata";
-import { IInjectable } from "../metadata/injectable";
 import { PARAMS_META_KEY } from "../metadata/reflect";
 import { getDependencies } from "../di/reflect";
 
