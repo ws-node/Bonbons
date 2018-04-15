@@ -1,7 +1,7 @@
 {
-  "name": "express-bws",
-  "version": "1.0.0",
-  "description": "bws express extensions",
+  "name": "bonbons",
+  "version": "1.0.0-beta",
+  "description": "a static typed MVC framework with express and typescript",
   "main": "dist/index.js",
   "scripts": {
     "start": "webpack --config webpack.config.js && node server/app.js"
