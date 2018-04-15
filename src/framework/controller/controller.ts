@@ -8,13 +8,6 @@ import { ControllerContext } from "./context";
  */
 export abstract class BaseController implements IController {
 
-    protected _prefix: string;
-    protected _routes: Array<IRoute>;
-    /**
-     * The routes defined in design-time.
-     */
-    public get routes() { return this._routes || (this._routes = []); }
-
     protected _context: ControllerContext;
     /**
      * Context for this controller, different request has different context.
@@ -26,42 +19,6 @@ export abstract class BaseController implements IController {
 
     constructor() { }
 
-}
-
-/**
- * Check and edit absolute route path and all work done.
- * @param ctrl controller prototype
- */
-export function registerCompelete<T extends BaseController>(ctrl: T) {
-    ctrl.routes.forEach(route => {
-        if (!(route.path || "").startsWith("/")) {
-            route.path = (<any>ctrl)._prefix + route.path;
-        }
-    });
-}
-
-/**
- * Config controller prefix.
- * @param ctrl controller prototype
- * @param prefix
- */
-export function registerPrefix<T extends BaseController>(ctrl: T, prefix?: string) {
-    (<any>ctrl)._prefix = ("/" + (prefix || "") + "/").replace("//", "/");
-}
-
-/**
- * Create or modify the route config
- * @param ctrl controller prototype
- * @param methodName
- * @param config
- */
-export function registerRoute<T extends BaseController>(ctrl: T, methodName: string, config: any) {
-    const route = ctrl.routes.find(i => i.methodName === methodName);
-    if (!route) {
-        ctrl.routes.push(Object.assign({ methodName }, config));
-    } else {
-        Object.assign(route, config);
-    }
 }
 
 /**

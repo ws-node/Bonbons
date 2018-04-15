@@ -1,7 +1,8 @@
-import { Controller, BaseController, Method, Route, Request, JsonResult } from "../../framework";
+import { Controller, BaseController, Method, Route, Request, JsonResult, Middleware } from "../../framework";
 import { SuperService } from "../services/main";
 
 @Controller("api")
+@Middleware([middleware01])
 export class MainController extends BaseController {
 
     constructor(private sup: SuperService) {
@@ -17,6 +18,7 @@ export class MainController extends BaseController {
 
     @Method("GET", "POST")
     @Route("index")
+    @Middleware([middleware02], false)
     public ApiIndex(): JsonResult {
         console.log("this is a api method with query id : " + this.context.query("id", Number));
         console.log("this is a api method with query select : " + this.context.query("select", Boolean));
@@ -24,4 +26,14 @@ export class MainController extends BaseController {
         return new JsonResult({ value: this.sup.print() });
     }
 
+}
+
+function middleware01(r, rs, next) {
+    console.log("123456");
+    next();
+}
+
+function middleware02(r, rs, next) {
+    console.log("555555");
+    next();
 }

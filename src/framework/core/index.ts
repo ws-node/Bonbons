@@ -3,6 +3,7 @@ import { CreateExpress, Express, Response } from "../metadata/core";
 import { InjectScope } from "../metadata/injectable";
 import { DIContainer } from "../di";
 import { IRoute, IMethodResult } from "../metadata/controller";
+import { Reflection } from "../di/reflect";
 
 class ExpressServer {
 
@@ -55,17 +56,21 @@ class ExpressServer {
     }
 
     private _registerControllers() {
-        this._ctrls.forEach(ctrl => ctrl.prototype.routes.forEach(route => this._registerRoutes(route, ctrl)));
+        this._ctrls.forEach(ctrl => {
+            const reflect = Reflection.GetControllerMetadata(ctrl.prototype);
+            const routes = Object.keys(reflect.router.routes).forEach(
+                key => this._registerRoutes(reflect.router.routes[key], ctrl, key));
+        });
     }
 
     private _createInstance<T extends typeof BaseController>(constor: T): T {
         return new (<any>constor)(...this.container.resolveDeps(constor));
     }
 
-    private _registerRoutes(route: IRoute, constructor: any) {
+    private _registerRoutes(route: IRoute, constructor: any, methodName: string) {
         route.allowMethods.forEach(
             method => {
-                let invoke: (path, fn) => void;
+                let invoke: (...args: any[]) => void;
                 switch (method) {
                     case "GET":
                     case "POST":
@@ -76,12 +81,14 @@ class ExpressServer {
                     case "HEAD": invoke = (...args: any[]) => this._express[method.toLowerCase()](...args); break;
                     default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
                 }
-                if (!route.path) throw new Error(`invalid REST method path : the path of action '${route.methodName}' is empty.`);
+                if (!route.path) throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
                 console.log(route.path);
-                invoke(route.path, (req, rep: Response) => {
-                    const result: IMethodResult | string = constructor.prototype[route.methodName].bind(bindContext(this._createInstance(constructor), req, rep))();
+                const middlewares = (route.middleware && route.middleware.list) || [];
+                middlewares.push((req, rep: Response) => {
+                    const result: IMethodResult | string = constructor.prototype[methodName].bind(bindContext(this._createInstance(constructor), req, rep))();
                     rep.send(result && result.toString());
                 });
+                invoke(route.path, ...middlewares);
             });
     }
 

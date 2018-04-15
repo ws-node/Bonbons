@@ -2,6 +2,8 @@ import { Request, Response } from "./core";
 
 export type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
+export type IMidleware = (request: Request, response: Response, next?: () => void) => void;
+
 export interface IContext {
     request: Request;
     response: Response;
@@ -11,13 +13,15 @@ export interface IController {
     context: IContext;
     request: Request;
     response: Response;
-    routes: Array<IRoute>;
 }
 
 export interface IRoute {
-    path?: string;
-    methodName: string;
+    path: string;
     allowMethods: AllowMethod[];
+    middleware: {
+        list: IMidleware[];
+        merge: boolean;
+    };
 }
 
 export interface IControllerConfig {
@@ -26,4 +30,12 @@ export interface IControllerConfig {
 
 export interface IMethodResult {
     toString(): string;
+}
+
+export interface IControllerMetadata {
+    router: {
+        routes: { [methodName: string]: IRoute }
+        prefix?: string;
+    };
+    middlewares: IMidleware[];
 }

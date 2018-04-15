@@ -1,8 +1,8 @@
 import "reflect-metadata";
 
-import { AllowMethod, IController, IControllerConfig } from "../metadata/controller";
-import { BaseController, registerRoute, registerCompelete, registerPrefix } from "./controller";
-import { CTOR_METHOD_META_KEY, CTOR_ROUTE_META_KEY } from "../metadata/reflect";
+import { AllowMethod, IController, IControllerConfig, IMidleware, IControllerMetadata, IRoute } from "../metadata/controller";
+import { BaseController } from "./controller";
+import { Reflection } from "../di/reflect";
 
 /**
  * Define a controller with config. the config is used for route prefix and other features.
@@ -17,19 +17,9 @@ export function Controller(config?: IControllerConfig);
 export function Controller(config?: string | IControllerConfig) {
     return function <T extends typeof BaseController>(target: T) {
         const prototype = target.prototype;
-        registerPrefix(prototype, typeof config === "string" ? config : config && config.prefix);
-        const keys = Reflect.getMetadataKeys(prototype);
-        keys.forEach(key => (Reflect.getMetadata(key, prototype) as any[]).forEach(prop => {
-            switch (key) {
-                case CTOR_METHOD_META_KEY:
-                case CTOR_ROUTE_META_KEY:
-                    const { propertyKey, ...others } = prop;
-                    registerRoute(prototype, propertyKey, others);
-                    break;
-                default: break;
-            }
-        }));
-        registerCompelete(prototype);
+        const reflect = Reflection.GetControllerMetadata(prototype);
+        Reflection.SetControllerMetadata(prototype, registerCompelete(registerPrefix(reflect, config)));
+        console.log(JSON.stringify(Reflection.GetControllerMetadata(prototype)));
     };
 }
 
@@ -39,9 +29,8 @@ export function Controller(config?: string | IControllerConfig) {
  */
 export function Method(...allowMethods: AllowMethod[]) {
     return function <T extends BaseController>(target: T, propertyKey: string) {
-        const values = Reflect.getMetadata(CTOR_METHOD_META_KEY, target) || [];
-        values.push({ propertyKey, allowMethods });
-        Reflect.defineMetadata(CTOR_METHOD_META_KEY, values, target);
+        const reflect = Reflection.GetControllerMetadata(target);
+        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { allowMethods }));
     };
 }
 
@@ -51,8 +40,60 @@ export function Method(...allowMethods: AllowMethod[]) {
  */
 export function Route(path: string) {
     return function <T extends BaseController>(target: T, propertyKey: string) {
-        const values = Reflect.getMetadata(CTOR_ROUTE_META_KEY, target) || [];
-        values.push({ propertyKey, path });
-        Reflect.defineMetadata(CTOR_ROUTE_META_KEY, values, target);
+        const reflect = Reflection.GetControllerMetadata(target);
+        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { path }));
     };
+}
+
+export function Middleware(middlewares: Array<IMidleware>, merge = true) {
+    return function <T extends BaseController | (typeof BaseController)>(target: any, propertyKey?: string) {
+        const isConstructor = !!(<any>target).prototype;
+        const prototype: BaseController = isConstructor ? (<any>target).prototype : <any>target;
+        const reflect = Reflection.GetControllerMetadata(prototype);
+        if (isConstructor) {
+            reflect.middlewares = middlewares;
+        } else {
+            reroute(reflect, <string>propertyKey, { middleware: { list: middlewares, merge } });
+        }
+        Reflection.SetControllerMetadata(prototype, reflect);
+    };
+}
+
+function initRoutes(reflect: IControllerMetadata, propertyKey: string): IRoute {
+    return reflect.router.routes[propertyKey] || (reflect.router.routes[propertyKey] = <any>{});
+}
+
+function reroute(reflect: IControllerMetadata, propertyKey: string, payload: any) {
+    Object.assign(initRoutes(reflect, propertyKey), payload);
+    return reflect;
+}
+
+/**
+ * Check and edit absolute route path, merge middlewares and all work done.
+ * @param ctrl controller prototype
+ */
+function registerCompelete(meta: IControllerMetadata) {
+    Object.keys(meta.router.routes).map(key => meta.router.routes[key]).forEach(route => {
+        if (!(route.path || "").startsWith("/")) {
+            route.path = meta.router.prefix + route.path;
+        }
+        if (route.middleware && route.middleware.merge) {
+            route.middleware.list = [...meta.middlewares, ...route.middleware.list];
+        }
+        if (!route.middleware) {
+            route.middleware = { list: [...meta.middlewares], merge: true };
+        }
+    });
+    return meta;
+}
+
+/**
+ * Config controller prefix.
+ * @param ctrl controller prototype
+ * @param prefix
+ */
+function registerPrefix(meta: IControllerMetadata, config?: string | IControllerConfig) {
+    const prefix = typeof config === "string" ? config : config && config.prefix;
+    meta.router.prefix = ("/" + (prefix || "") + "/").replace("//", "/");
+    return meta;
 }
