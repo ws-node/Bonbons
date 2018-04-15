@@ -63,7 +63,7 @@ Server.Create()
     .controller(MainController);
 ```
 
-3. Use ABC to split dependency
+#### 3. Use ABC to split dependency
 ```TypeScript
 // define a ABC
 export abstract class ABCService {
@@ -110,7 +110,7 @@ export class SuperService {
 // it works!
 ```
 
-4. Add middlewares for route or controller
+#### 4. Add middlewares for route or controller
 ```TypeScript
 // first create middleware in pure function format.
 function middleware01(r, rs, next) {
