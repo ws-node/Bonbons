@@ -38,6 +38,7 @@ export function Method(...allowMethods: AllowMethod[]) {
  * Define a method path for a route. absolute or relative path is supported.
  * Declare query params name to use static-typed variable.
  * @param {string} path
+ * @param {string[]} query provide query params names to open static-injection for query params through method
  */
 export function Route(path: string, query?: string[]) {
     return function <T extends BaseController>(target: T, propertyKey: string) {
