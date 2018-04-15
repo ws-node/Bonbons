@@ -17,8 +17,9 @@ export declare function Controller(config?: IControllerConfig): any;
  */
 export declare function Method(...allowMethods: AllowMethod[]): <T extends BaseController>(target: T, propertyKey: string) => void;
 /**
- * Define a method path for a route. absolute or relative path is supported..
+ * Define a method path for a route. absolute or relative path is supported.
+ * Declare query params name to use static-typed variable.
  * @param {string} path
  */
-export declare function Route(path: string): <T extends BaseController>(target: T, propertyKey: string) => void;
+export declare function Route(path: string, query?: string[]): <T extends BaseController>(target: T, propertyKey: string) => void;
 export declare function Middleware(middlewares: Array<IMidleware>, merge?: boolean): <T extends BaseController | typeof BaseController>(target: any, propertyKey?: string) => void;

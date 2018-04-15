@@ -19,6 +19,6 @@ declare class ExpressServer {
     run(work: () => void): void;
     private _registerControllers();
     private _createInstance<T>(constor);
-    private _registerRoutes(route, constructor, methodName);
+    private _registerRoutes<T>(route, constructor, methodName);
 }
 export { ExpressServer as Server };

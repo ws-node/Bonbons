@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 const reflect_1 = require("../di/reflect");
+const __1 = require("..");
 function Controller(config) {
     return function (target) {
         const prototype = target.prototype;
@@ -22,13 +23,20 @@ function Method(...allowMethods) {
 }
 exports.Method = Method;
 /**
- * Define a method path for a route. absolute or relative path is supported..
+ * Define a method path for a route. absolute or relative path is supported.
+ * Declare query params name to use static-typed variable.
  * @param {string} path
  */
-function Route(path) {
+function Route(path, query) {
     return function (target, propertyKey) {
+        const querys = Reflect.getMetadata(__1.PARAMS_META_KEY, target, propertyKey);
         const reflect = reflect_1.Reflection.GetControllerMetadata(target);
-        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { path }));
+        const routes = reflect.router.routes;
+        reroute(reflect, propertyKey, { path, queryParams: [] });
+        if (query && query.length > 0) {
+            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? String : q });
+        }
+        reflect_1.Reflection.SetControllerMetadata(target, reflect);
     };
 }
 exports.Route = Route;
@@ -66,8 +74,8 @@ function registerCompelete(meta) {
         if (route.middleware && route.middleware.merge) {
             route.middleware.list = [...meta.middlewares, ...route.middleware.list];
         }
-        if (!route.middleware) {
-            route.middleware = { list: [...meta.middlewares], merge: true };
+        if (!route.middleware || !route.middleware.merge) {
+            route.middleware = { list: [...meta.middlewares], merge: false };
         }
     });
     return meta;
