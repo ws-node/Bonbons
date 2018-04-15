@@ -17,11 +17,15 @@ export class MainController extends BaseController {
     }
 
     @Method("GET", "POST")
-    @Route("index", ["id", "select"])
+    @Route("index", ["id", "select", "msg"])
     @Middleware([middleware02], false)
-    public ApiIndex(id: number, select: boolean): JsonResult {
+    public ApiIndex(id: number, select: boolean, msg): JsonResult {
         console.log(id);
         console.log(select);
+        console.log(msg);
+        console.log(typeof id);
+        console.log(typeof select);
+        console.log(typeof msg);
         console.log("this is a api method with query id : " + this.context.query("id", Number));
         console.log("this is a api method with query select : " + this.context.query("select", Boolean));
         console.log("this is a api method with query notexist : " + this.context.query("notexist"));

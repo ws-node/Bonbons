@@ -47,7 +47,7 @@ export function Route(path: string, query?: string[]) {
         const routes = reflect.router.routes;
         reroute(reflect, propertyKey, { path, queryParams: [] });
         if (query && query.length > 0) {
-            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? String : q });
+            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? null : q });
         }
         Reflection.SetControllerMetadata(target, reflect);
     };
