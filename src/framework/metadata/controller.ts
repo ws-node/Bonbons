@@ -22,6 +22,7 @@ export interface IRoute {
         list: IMidleware[];
         merge: boolean;
     };
+    queryParams: Array<{ key: string, type: any }>;
 }
 
 export interface IControllerConfig {

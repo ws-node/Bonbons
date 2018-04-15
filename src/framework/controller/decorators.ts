@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { AllowMethod, IController, IControllerConfig, IMidleware, IControllerMetadata, IRoute } from "../metadata/controller";
 import { BaseController } from "./controller";
 import { Reflection } from "../di/reflect";
+import { PARAMS_META_KEY } from "..";
 
 /**
  * Define a controller with config. the config is used for route prefix and other features.
@@ -34,13 +35,20 @@ export function Method(...allowMethods: AllowMethod[]) {
 }
 
 /**
- * Define a method path for a route. absolute or relative path is supported..
+ * Define a method path for a route. absolute or relative path is supported.
+ * Declare query params name to use static-typed variable.
  * @param {string} path
  */
-export function Route(path: string) {
+export function Route(path: string, query?: string[]) {
     return function <T extends BaseController>(target: T, propertyKey: string) {
+        const querys: any[] = Reflect.getMetadata(PARAMS_META_KEY, target, propertyKey);
         const reflect = Reflection.GetControllerMetadata(target);
-        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { path }));
+        const routes = reflect.router.routes;
+        reroute(reflect, propertyKey, { path, queryParams: [] });
+        if (query && query.length > 0) {
+            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? String : q });
+        }
+        Reflection.SetControllerMetadata(target, reflect);
     };
 }
 

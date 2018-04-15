@@ -63,11 +63,12 @@ class ExpressServer {
         });
     }
 
-    private _createInstance<T extends typeof BaseController>(constor: T): T {
+    private _createInstance<T extends typeof BaseController>(constor: T): BaseController {
         return new (<any>constor)(...this.container.resolveDeps(constor));
     }
 
-    private _registerRoutes(route: IRoute, constructor: any, methodName: string) {
+    private _registerRoutes<T extends typeof BaseController>(route: IRoute, constructor: T, methodName: string) {
+        const reflect = Reflection.GetControllerMetadata(constructor.prototype);
         route.allowMethods.forEach(
             method => {
                 let invoke: (...args: any[]) => void;
@@ -84,7 +85,9 @@ class ExpressServer {
                 if (!route.path) throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
                 const middlewares = (route.middleware && route.middleware.list) || [];
                 middlewares.push((req, rep: Response) => {
-                    const result: IMethodResult | string = constructor.prototype[methodName].bind(bindContext(this._createInstance(constructor), req, rep))();
+                    const context = bindContext(this._createInstance(constructor), req, rep);
+                    const querys = (reflect.router.routes[methodName].queryParams || []).map(ele => context.context.query(ele.key, ele.type));
+                    const result: IMethodResult | string = constructor.prototype[methodName].bind(context)(...querys);
                     rep.send(result && result.toString());
                 });
                 invoke(route.path, ...middlewares);
