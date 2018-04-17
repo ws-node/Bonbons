@@ -6,15 +6,13 @@ export type ICommonMidleware = (request: Request, response: Response, next?: () 
 export type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
 export type IMidleware = ICommonMidleware | IErrorMiddleware;
 
-export interface IContext {
-    request: Request;
-    response: Response;
+export interface IContext<REQ, REP> {
+    request: REQ;
+    response: REP;
 }
 
-export interface IController {
-    context: IContext;
-    request: Request;
-    response: Response;
+export interface IController<REQ, REP> {
+    context: IContext<REQ, REP>;
 }
 
 export interface IRoute {

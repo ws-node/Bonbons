@@ -32,6 +32,16 @@ export class MainController extends BaseController {
         return new JsonResult({ value: this.sup.print() });
     }
 
+    @Method("POST")
+    @Route("post")
+    @Middleware([], false)
+    public POSTIndex(): string {
+        console.log("this is a post method");
+        const form = this.context.form;
+        console.log(this.context.request.source.body);
+        return JSON.stringify(form.data);
+    }
+
 }
 
 function middleware01(r, rs, next) {

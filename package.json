@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/ws-node/express-demo#readme",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "express": "^4.16.3",
     "express-serve-static-core": "^0.1.1",
     "reflect-metadata": "^0.1.12",

@@ -1,21 +1,20 @@
 import { IController, IContext } from "../metadata/controller";
 import { IRoute } from "./../metadata/controller";
 import { Request, Response } from "../metadata";
-import { ControllerContext } from "./context";
+import { ControllerContext, HttpRequest, HttpResponse } from "./context";
+
+export type IBaseController = IController<HttpRequest, HttpResponse>;
 
 /**
  * Abstract class for controllers. You should always extends this class to create your controller.
  */
-export abstract class BaseController implements IController {
+export abstract class BaseController implements IBaseController {
 
     protected _context: ControllerContext;
     /**
      * Context for this controller, different request has different context.
      */
     public get context(): ControllerContext { return this._context; }
-
-    public get request(): Request { return this.context.request; }
-    public get response(): Response { return this.context.response; }
 
     constructor() { }
 
