@@ -9,8 +9,6 @@ class BaseController {
      * Context for this controller, different request has different context.
      */
     get context() { return this._context; }
-    get request() { return this.context.request; }
-    get response() { return this.context.response; }
     constructor() { }
 }
 exports.BaseController = BaseController;

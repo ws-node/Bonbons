@@ -20,6 +20,7 @@ export declare function Method(...allowMethods: AllowMethod[]): <T extends BaseC
  * Define a method path for a route. absolute or relative path is supported.
  * Declare query params name to use static-typed variable.
  * @param {string} path
+ * @param {string[]} query provide query params names to open static-injection for query params through method
  */
 export declare function Route(path: string, query?: string[]): <T extends BaseController>(target: T, propertyKey: string) => void;
 export declare function Middleware(middlewares: Array<IMidleware>, merge?: boolean): <T extends BaseController | typeof BaseController>(target: any, propertyKey?: string) => void;

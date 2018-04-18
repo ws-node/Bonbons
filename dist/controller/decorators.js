@@ -26,6 +26,7 @@ exports.Method = Method;
  * Define a method path for a route. absolute or relative path is supported.
  * Declare query params name to use static-typed variable.
  * @param {string} path
+ * @param {string[]} query provide query params names to open static-injection for query params through method
  */
 function Route(path, query) {
     return function (target, propertyKey) {
@@ -34,7 +35,7 @@ function Route(path, query) {
         const routes = reflect.router.routes;
         reroute(reflect, propertyKey, { path, queryParams: [] });
         if (query && query.length > 0) {
-            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? String : q });
+            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? null : q });
         }
         reflect_1.Reflection.SetControllerMetadata(target, reflect);
     };

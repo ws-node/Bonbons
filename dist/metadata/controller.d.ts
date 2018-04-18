@@ -1,14 +1,14 @@
 import { Request, Response } from "./core";
 export declare type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
-export declare type IMidleware = (request: Request, response: Response, next?: () => void) => void;
-export interface IContext {
-    request: Request;
-    response: Response;
+export declare type ICommonMidleware = (request: Request, response: Response, next?: () => void) => void;
+export declare type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
+export declare type IMidleware = ICommonMidleware | IErrorMiddleware;
+export interface IContext<REQ, REP> {
+    request: REQ;
+    response: REP;
 }
-export interface IController {
-    context: IContext;
-    request: Request;
-    response: Response;
+export interface IController<REQ, REP> {
+    context: IContext<REQ, REP>;
 }
 export interface IRoute {
     path: string;

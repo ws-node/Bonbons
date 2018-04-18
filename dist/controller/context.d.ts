@@ -1,15 +1,37 @@
 import { Request, Response } from "./../metadata";
 import { IContext } from "../metadata/controller";
 export declare type BaseCtor = typeof Number | typeof Boolean | typeof String | typeof Object;
+export declare type IControllerContext = IContext<HttpRequest, HttpResponse>;
+export interface IFormData {
+    data: any;
+    get(key: string, type?: any): any;
+}
+export declare class HttpRequest {
+    private _request;
+    readonly source: Request;
+    private _form;
+    readonly form: IFormData;
+    constructor(_request: Request);
+    queryParam(key: string): string;
+    queryParam(key: string, type: any): any;
+    formParam(key: string): string;
+    formParam(key: string, type: any): any;
+}
+export declare class HttpResponse {
+    private _response;
+    readonly source: Response;
+    constructor(_response: Response);
+}
 /**
  * Pack context with the response and request for a controller.
  */
-export declare class ControllerContext implements IContext {
+export declare class ControllerContext implements IControllerContext {
     private _request;
+    readonly request: HttpRequest;
     private _response;
-    readonly request: Request;
-    readonly response: Response;
-    constructor(_request: Request, _response: Response);
+    readonly response: HttpResponse;
+    readonly form: IFormData;
+    constructor(request: Request, response: Response);
     /**
      * Try read a query param from request with key.
      * @param key the query param key
