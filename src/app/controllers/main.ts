@@ -1,4 +1,9 @@
-import { Controller, BaseController, Method, Route, Request, JsonResult, Middleware } from "../../framework";
+import {
+    Controller, BaseController, Method,
+    Route, Request, JsonResult,
+    Middleware, FromForm, FromBody,
+    FormURL
+} from "../../framework";
 import { SuperService } from "../services/main";
 
 @Controller("api")
@@ -35,11 +40,12 @@ export class MainController extends BaseController {
     @Method("POST")
     @Route("post")
     @Middleware([], false)
-    public POSTIndex(): string {
+    public POSTIndex(name: string, @FromBody() params: any): JsonResult {
         console.log("this is a post method");
         const form = this.context.form;
-        console.log(this.context.request.source.body);
-        return JSON.stringify(form.data);
+        console.log(form.data);
+        console.log(params);
+        return new JsonResult(params);
     }
 
 }

@@ -173,5 +173,38 @@ export class MainController extends BaseController {
 }
 ```
 
+### 5. Form control
+```TypeScript
+// there are two ways to access the form data
+    @Method("POST")
+    @Route("post")
+    @Middleware([], false)
+    public POSTIndex(name:string, @FromBody() params: any): JsonResult {
+        console.log("this is a post method");
+        const form = this.context.form;
+        console.log(form.data);
+        console.log(params);
+        return new JsonResult(params);
+    }
+
+    // then post message in application/json format : 
+    // {"name":"bws", age:123}
+
+    // console output:
+    // {"name":"bws", age:123}
+    // {"name":"bws", age:123}
+
+    /*
+    * All supported decorators :
+    * @FromBody()   -   default : application/json
+    * @FromForm()   -   default : multiple/form-data
+    * @FromURL()     -   default : application/x-www-form-urlencoded
+    * @RawBody()   -   default : application/octet-stream
+    * @TextBody()   -   default : text/plain
+    */
+
+   // static-typed form params will be introduced later.
+```
+
 **Still in developing...**
 

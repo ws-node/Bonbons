@@ -1,8 +1,8 @@
-import { Server } from "./../framework";
+import { Bonbons } from "./../framework";
 import { MainController } from "./controllers/main";
 import { MainService, SecService, SuperService, ABCService } from "./services/main";
 
-Server.Create()
+Bonbons.Create()
     .controller(MainController)
     .singleton(SecService)
     .scoped(SuperService)

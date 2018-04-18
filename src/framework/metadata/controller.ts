@@ -22,7 +22,12 @@ export interface IRoute {
         list: IMidleware[];
         merge: boolean;
     };
-    queryParams: Array<{ key: string, type: any }>;
+    funcParams: Array<{ key: string, type: any }>;
+    form: {
+        parser: "mutiple" | "json" | "url" | "raw" | "text";
+        index: number;
+        type?: string;
+    };
 }
 
 export interface IControllerConfig {

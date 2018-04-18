@@ -3,7 +3,7 @@ import "reflect-metadata";
 import { AllowMethod, IController, IControllerConfig, IMidleware, IControllerMetadata, IRoute } from "../metadata/controller";
 import { BaseController } from "./controller";
 import { Reflection } from "../di/reflect";
-import { PARAMS_META_KEY } from "..";
+import { PARAMS_META_KEY, BodyParser } from "..";
 
 /**
  * Define a controller with config. the config is used for route prefix and other features.
@@ -35,7 +35,7 @@ export function Method(...allowMethods: AllowMethod[]) {
 }
 
 /**
- * Define a method path for a route. absolute or relative path is supported.
+ * Define a method path for a route. absolute or relative path is supported. <nesessary>
  * Declare query params name to use static-typed variable.
  * @param {string} path
  * @param {string[]} query provide query params names to open static-injection for query params through method
@@ -44,15 +44,19 @@ export function Route(path: string, query?: string[]) {
     return function <T extends BaseController>(target: T, propertyKey: string) {
         const querys: any[] = Reflect.getMetadata(PARAMS_META_KEY, target, propertyKey);
         const reflect = Reflection.GetControllerMetadata(target);
-        const routes = reflect.router.routes;
-        reroute(reflect, propertyKey, { path, queryParams: [] });
-        if (query && query.length > 0) {
-            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? null : q });
-        }
+        const route = reflect.router.routes[propertyKey];
+        const queryList = query || [];
+        reroute(reflect, propertyKey, { path, funcParams: [] });
+        querys.forEach((q, index) => route.funcParams[index] = { key: <string>(queryList[index] || null), type: q === Object ? null : q });
         Reflection.SetControllerMetadata(target, reflect);
     };
 }
 
+/**
+ * Define middlewares for controller or a route.
+ * @param middlewares middlewares list
+ * @param merge merge middlewares list with controller middlewares or not, default is true.
+ */
 export function Middleware(middlewares: Array<IMidleware>, merge = true) {
     return function <T extends BaseController | (typeof BaseController)>(target: any, propertyKey?: string) {
         const isConstructor = !!(<any>target).prototype;
@@ -64,6 +68,78 @@ export function Middleware(middlewares: Array<IMidleware>, merge = true) {
             reroute(reflect, <string>propertyKey, { middleware: { list: middlewares, merge } });
         }
         Reflection.SetControllerMetadata(prototype, reflect);
+    };
+}
+
+/** Get form message from body when type is [multiple/form-data] */
+export function FromForm();
+/** Get form message from body when default type is [multiple/form-data] */
+export function FromForm(type: string);
+export function FromForm(type?: string) {
+    return function <T extends BaseController>(target: T, propertyKey: string, index: number) {
+        if (index === undefined || index < 0) { return; }
+        const reflect = Reflection.GetControllerMetadata(target);
+        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "mutiple", index } }));
+    };
+}
+
+/** Get form message from body when type is [application/json] */
+export function FromBody();
+/** Get form message from body when default type is [application/json] */
+export function FromBody(type: string);
+/** Get form message from body when default type is [application/json] */
+export function FromBody(config: BodyParser.OptionsJson);
+export function FromBody(config?: string | BodyParser.OptionsJson) {
+    return function <T extends BaseController>(target: T, propertyKey: string, index: number) {
+        if (index === undefined || index < 0) { return; }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = Reflection.GetControllerMetadata(target);
+        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "json", index } }));
+    };
+}
+
+/** Get form message from body when type is [application/x-www-form-urlencoded] */
+export function FormURL();
+/** Get form message from body when default type is [application/x-www-form-urlencoded] */
+export function FormURL(type: string);
+/** Get form message from body when default type is [application/x-www-form-urlencoded] */
+export function FormURL(config: BodyParser.OptionsUrlencoded);
+export function FormURL(config?: string | BodyParser.OptionsUrlencoded) {
+    return function <T extends BaseController>(target: T, propertyKey: string, index: number) {
+        if (index === undefined || index < 0) { return; }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = Reflection.GetControllerMetadata(target);
+        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "url", index } }));
+    };
+}
+
+/** Get form message from body when type is [application/octet-stream] */
+export function RawBody();
+/** Get form message from body when default type is [application/octet-stream] */
+export function RawBody(type: string);
+/** Get form message from body when default type is [application/octet-stream] */
+export function RawBody(config: BodyParser.Options);
+export function RawBody(config?: string | BodyParser.Options) {
+    return function <T extends BaseController>(target: T, propertyKey: string, index: number) {
+        if (index === undefined || index < 0) { return; }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = Reflection.GetControllerMetadata(target);
+        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "raw", index } }));
+    };
+}
+
+/** Get form message from body when type is [text/plain] */
+export function TextBody();
+/** Get form message from body when default type is [text/plain] */
+export function TextBody(type: string);
+/** Get form message from body when default type is [text/plain] */
+export function TextBody(config: BodyParser.OptionsText);
+export function TextBody(config?: string | BodyParser.OptionsText) {
+    return function <T extends BaseController>(target: T, propertyKey: string, index: number) {
+        if (index === undefined || index < 0) { return; }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = Reflection.GetControllerMetadata(target);
+        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "text", index } }));
     };
 }
 

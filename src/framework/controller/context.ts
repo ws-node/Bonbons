@@ -19,7 +19,7 @@ export class HttpRequest {
 
     constructor(private _request: Request) {
         this._form = {
-            data: this._request.params,
+            data: this._request.body,
             get: this.formParam.bind(this)
         };
     }
