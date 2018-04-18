@@ -17,10 +17,15 @@ export interface IRoute {
         list: IMidleware[];
         merge: boolean;
     };
-    queryParams: Array<{
+    funcParams: Array<{
         key: string;
         type: any;
     }>;
+    form: {
+        parser: "mutiple" | "json" | "url" | "raw" | "text";
+        index: number;
+        type?: string;
+    };
 }
 export interface IControllerConfig {
     prefix?: string;

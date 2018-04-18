@@ -4,7 +4,7 @@ class HttpRequest {
     constructor(_request) {
         this._request = _request;
         this._form = {
-            data: this._request.params,
+            data: this._request.body,
             get: this.formParam.bind(this)
         };
     }

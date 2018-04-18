@@ -10,7 +10,7 @@ class Reflection {
         return getDependencies(target);
     }
     static GetControllerMetadata(target) {
-        return Reflect.getMetadata(reflect_1.CTOR_META_KEY, target) || { router: { prefix: "/", routes: {} }, middlewares: [], queryParams: [] };
+        return Reflect.getMetadata(reflect_1.CTOR_META_KEY, target) || { router: { prefix: "/", routes: {} }, middlewares: [] };
     }
     static SetControllerMetadata(target, meta) {
         Reflect.defineMetadata(reflect_1.CTOR_META_KEY, meta, target);

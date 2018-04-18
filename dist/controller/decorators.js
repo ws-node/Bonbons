@@ -23,7 +23,7 @@ function Method(...allowMethods) {
 }
 exports.Method = Method;
 /**
- * Define a method path for a route. absolute or relative path is supported.
+ * Define a method path for a route. absolute or relative path is supported. <nesessary>
  * Declare query params name to use static-typed variable.
  * @param {string} path
  * @param {string[]} query provide query params names to open static-injection for query params through method
@@ -32,15 +32,19 @@ function Route(path, query) {
     return function (target, propertyKey) {
         const querys = Reflect.getMetadata(__1.PARAMS_META_KEY, target, propertyKey);
         const reflect = reflect_1.Reflection.GetControllerMetadata(target);
-        const routes = reflect.router.routes;
-        reroute(reflect, propertyKey, { path, queryParams: [] });
-        if (query && query.length > 0) {
-            querys.forEach((q, index) => routes[propertyKey].queryParams[index] = { key: query[index], type: q === Object ? null : q });
-        }
+        const route = reflect.router.routes[propertyKey];
+        const queryList = query || [];
+        reroute(reflect, propertyKey, { path, funcParams: [] });
+        querys.forEach((q, index) => route.funcParams[index] = { key: (queryList[index] || null), type: q === Object ? null : q });
         reflect_1.Reflection.SetControllerMetadata(target, reflect);
     };
 }
 exports.Route = Route;
+/**
+ * Define middlewares for controller or a route.
+ * @param middlewares middlewares list
+ * @param merge merge middlewares list with controller middlewares or not, default is true.
+ */
 function Middleware(middlewares, merge = true) {
     return function (target, propertyKey) {
         const isConstructor = !!target.prototype;
@@ -56,6 +60,60 @@ function Middleware(middlewares, merge = true) {
     };
 }
 exports.Middleware = Middleware;
+function FromForm(type) {
+    return function (target, propertyKey, index) {
+        if (index === undefined || index < 0) {
+            return;
+        }
+        const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "mutiple", index } }));
+    };
+}
+exports.FromForm = FromForm;
+function FromBody(config) {
+    return function (target, propertyKey, index) {
+        if (index === undefined || index < 0) {
+            return;
+        }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "json", index } }));
+    };
+}
+exports.FromBody = FromBody;
+function FormURL(config) {
+    return function (target, propertyKey, index) {
+        if (index === undefined || index < 0) {
+            return;
+        }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "url", index } }));
+    };
+}
+exports.FormURL = FormURL;
+function RawBody(config) {
+    return function (target, propertyKey, index) {
+        if (index === undefined || index < 0) {
+            return;
+        }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "raw", index } }));
+    };
+}
+exports.RawBody = RawBody;
+function TextBody(config) {
+    return function (target, propertyKey, index) {
+        if (index === undefined || index < 0) {
+            return;
+        }
+        const type = config && (typeof (config) === "string" ? config : config.type);
+        const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reflect_1.Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser: "text", index } }));
+    };
+}
+exports.TextBody = TextBody;
 function initRoutes(reflect, propertyKey) {
     return reflect.router.routes[propertyKey] || (reflect.router.routes[propertyKey] = {});
 }
