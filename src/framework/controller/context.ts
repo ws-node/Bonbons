@@ -24,34 +24,22 @@ export class HttpRequest {
         };
     }
 
-    public queryParam(key: string): string;
-    public queryParam(key: string, type: any): any;
-    public queryParam(key: string, type?: any) {
-        const value = this._request.query[key] || null;
-        if (type && value) {
-            try {
-                return type(value);
-            } catch (e) {
-                throw new Error(`Type convert failed : can't convert value [${value}] to [${type}]`);
-            }
-        } else {
-            return value;
-        }
+    public query(key: string): string;
+    public query(key: string, type: any): any;
+    public query(key: string, type?: any) {
+        return convertTo(this._request.query[key] || null, type);
+    }
+
+    public param(key: string): string;
+    public param(key: string, type: any): any;
+    public param(key: string, type?: any) {
+        return convertTo(this._request.params[key] || null, type);
     }
 
     public formParam(key: string): string;
     public formParam(key: string, type: any): any;
     public formParam(key: string, type?: any) {
-        const value = this._request.params[key] || null;
-        if (type && value) {
-            try {
-                return type(value);
-            } catch (e) {
-                throw new Error(`Type convert failed : can't convert value [${value}] to [${type}]`);
-            }
-        } else {
-            return value;
-        }
+        return convertTo((this._request.body && (this._request.body[key])) || null, type);
     }
 
 }
@@ -88,7 +76,23 @@ export class ControllerContext implements IControllerContext {
      * @param type the type constructor wanted
      */
     public query(key: string, type?: BaseCtor) {
-        return this.request.queryParam(key, type);
+        return this.request.query(key, type);
     }
 
+    public param(key: string, type?: BaseCtor) {
+        return this.request.param(key, type);
+    }
+
+}
+
+function convertTo(value: any, type: any) {
+    if (type && value) {
+        try {
+            return type(value);
+        } catch (e) {
+            throw new Error(`Type convert failed : can't convert value [${value}] to [${type}]`);
+        }
+    } else {
+        return value;
+    }
 }

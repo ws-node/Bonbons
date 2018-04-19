@@ -23,7 +23,7 @@ export interface IRoute {
         list: IMidleware[];
         merge: boolean;
     };
-    funcParams: Array<{ key: string, type: any }>;
+    funcParams: Array<{ key: string, type: any, isQuery: boolean }>;
     form: {
         parser: "mutiple" | "json" | "url" | "raw" | "text";
         index: number;

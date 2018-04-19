@@ -1,8 +1,7 @@
 import {
     Controller, BaseController, Method,
     Route, Request, JsonResult,
-    Middleware, FromForm, FromBody,
-    FormURL
+    Middleware, FromForm, FromBody, FormData
 } from "../../framework";
 import { SuperService } from "../services/main";
 
@@ -38,14 +37,21 @@ export class MainController extends BaseController {
     }
 
     @Method("POST")
-    @Route("post")
+    @Route("post/:id/details/:name", ["query", "find"])
     @Middleware([], false)
-    public POSTIndex(name: string, @FromBody() params: any): JsonResult {
+    public POSTIndex(
+        id: number,
+        name: string,
+        query: string,
+        find: string,
+        @FromBody() params: any): JsonResult {
+
         console.log("this is a post method");
+        console.log(`${id} - ${name} - ${query} - ${find}`);
         const form = this.context.form;
         console.log(form.data);
         console.log(params);
-        return this.toJSON(params);
+        return this.toJSON({ params, id, name, query, find });
     }
 
 }

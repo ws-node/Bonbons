@@ -4,7 +4,7 @@ import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult } from "../metadata";
+import { IRoute, IMethodResult, IMidleware } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { BODY_PARSE_METADATA, createOptions, ConfigKey, IOptions, JSON_RESULT_OPTIONS } from "../metadata/config";
@@ -130,45 +130,61 @@ export class ExpressServer {
 
     private _registerRoutes<T extends typeof BaseController>(route: IRoute, constructor: T, methodName: string) {
         route.allowMethods.forEach(
-            method => {
-                let invoke: (...args: any[]) => void;
-                switch (method) {
-                    case "GET":
-                    case "POST":
-                    case "PUT":
-                    case "DELETE":
-                    case "PATCH":
-                    case "OPTIONS":
-                    case "HEAD": invoke = (...args: any[]) => this._express[method.toLowerCase()](...args); break;
-                    default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
-                }
+            m => {
                 if (!route.path) throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
+                const invoke: (...args: any[]) => void = this._selectFuncMethod<T>(m);
                 const middlewares = (route.middleware && route.middleware.list) || [];
-                if (route.form && route.form.parser) {
-                    switch (route.form.parser) {
-                        case "mutiple": middlewares.unshift(MultiplePartParser().any()); break;
-                        case "json": middlewares.unshift(JSONParser(this.parseMeta.json)); break;
-                        case "url": middlewares.unshift(URLEncodedParser(this.parseMeta.urlencoded)); break;
-                        case "raw": middlewares.unshift(RawParser(this.parseMeta.raw)); break;
-                        case "text": middlewares.unshift(TextParser(this.parseMeta.text)); break;
-                        default: break;
-                    }
-                }
-                middlewares.push((req: Request, rep: Response) => {
-                    const context = bindContext(this._createInstance(constructor), req, rep);
-                    const querys = (route.funcParams || []).map(ele => context.context.query(ele.key, ele.type));
-                    if (route.form && route.form.index >= 0) {
-                        querys[route.form.index] = req.body;
-                    }
-                    const result: IMethodResult | string = constructor.prototype[methodName].bind(context)(...querys);
-                    if (typeof result === "string") {
-                        rep.send(result);
-                    } else {
-                        rep.send(result && result.toString(this.configs));
-                    }
-                });
+                this._selectFormParser(route, middlewares);
+                this._decideFinalStep(route, middlewares, constructor, methodName);
                 invoke(route.path, ...middlewares);
             });
+    }
+
+    private _selectFuncMethod<T extends typeof BaseController>(method: string) {
+        let invoke: (...args: any[]) => void;
+        switch (method) {
+            case "GET":
+            case "POST":
+            case "PUT":
+            case "DELETE":
+            case "PATCH":
+            case "OPTIONS":
+            case "HEAD": invoke = (...args: any[]) => this._express[method.toLowerCase()](...args); break;
+            default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
+        }
+        return invoke;
+    }
+
+    private _parseFuncParams<T extends typeof BaseController>(constructor: T, req: Request, rep: Response, route: IRoute) {
+        const context = bindContext(this._createInstance(constructor), req, rep);
+        const querys = (route.funcParams || []).map(ele => ele.isQuery ? context.context.query(ele.key, ele.type) : context.context.param(ele.key, ele.type));
+        if (route.form && route.form.index >= 0) querys[route.form.index] = req.body;
+        return { context, params: querys };
+    }
+
+    private _decideFinalStep<T extends typeof BaseController>(route: IRoute, middlewares: IMidleware[], constructor: T, methodName: string) {
+        middlewares.push((req: Request, rep: Response) => {
+            const { context, params } = this._parseFuncParams<T>(constructor, req, rep, route);
+            const result: IMethodResult | string = constructor.prototype[methodName].bind(context)(...params);
+            if (typeof result === "string") {
+                rep.send(result);
+            } else {
+                rep.send(result && result.toString(this.configs));
+            }
+        });
+    }
+
+    private _selectFormParser(route: IRoute, middlewares: IMidleware[]) {
+        if (route.form && route.form.parser) {
+            switch (route.form.parser) {
+                case "mutiple": middlewares.unshift(MultiplePartParser().any()); break;
+                case "json": middlewares.unshift(JSONParser(this.parseMeta.json)); break;
+                case "url": middlewares.unshift(URLEncodedParser(this.parseMeta.urlencoded)); break;
+                case "raw": middlewares.unshift(RawParser(this.parseMeta.raw)); break;
+                case "text": middlewares.unshift(TextParser(this.parseMeta.text)); break;
+                default: break;
+            }
+        }
     }
 
 }
