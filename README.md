@@ -24,9 +24,9 @@ export class SecService {
 ...
 
 // register a scoped-service
-Server.Create().scoped(SecService);
+Bonbons.Create().scoped(SecService);
 // or register a singleton-service
-Server.Create().singleton(SecService);
+Bonbons.Create().singleton(SecService);
 ```
 
 #### 2. Create a controller and register 
@@ -72,7 +72,7 @@ export class MainController extends BaseController {
 ...
 
 // register controller
-Server.Create()
+Bonbons.Create()
     .scoped(SecService)
     .controller(MainController);
 ```
@@ -103,7 +103,7 @@ export class MainService extends ABCService {
 ...
 
 // finally inject it
-Server.Create()
+Bonbons.Create()
     .controller(MainController)
     .scoped(SecService)
     .scoped(ABCService, MainService)
@@ -173,7 +173,7 @@ export class MainController extends BaseController {
 }
 ```
 
-### 5. Form control
+#### 5. Form control
 ```TypeScript
 // there are two ways to access the form data
     @Method("POST")
@@ -197,13 +197,78 @@ export class MainController extends BaseController {
     /*
     * All supported decorators :
     * @FromBody()   -   default : application/json
-    * @FromForm()   -   default : multiple/form-data
-    * @FromURL()     -   default : application/x-www-form-urlencoded
+    * @FormData()   -   default : multiple/form-data
+    * @FromForm()   -   default : application/x-www-form-urlencoded
     * @RawBody()   -   default : application/octet-stream
     * @TextBody()   -   default : text/plain
     */
 
    // static-typed form params will be introduced later.
+```
+
+#### 6.Multiple injections with POST/PUT
+```TypeScript
+// create a static-type model to describe form structure:
+import { Serialization, Deserialization } from "./../../framework";
+
+// model to describe the form data structure
+export class PostModel {
+
+    // data contract
+    @Serialization("name")
+    @Deserialization("name")
+    private _name: string;
+    public get Name() { return this._name; }
+
+    // data contract and type convert
+    @Serialization(Number, "max")
+    @Deserialization(Number, "max")
+    private _max: number;
+    public get MAX() { return this._max; }
+
+}
+
+// then try to create a post method:
+    @Method("POST")
+    @Route("post/:id/details/:name", ["query", "find"])
+    @Middleware([], false)
+    public POSTIndex( // you can access params, queryParams and form object by function-params-injection.
+        id: number,
+        name: string,
+        query: string,
+        find: string,
+        @FromBody() params: PostModel): JsonResult {
+
+        console.log("this is a post method");
+        console.log(`${id} - ${name} - ${query} - ${find}`); 
+        console.log(`${typeof id} - ${typeof name} - ${typeof query} - ${typeof find}`);
+        console.log(params);
+        console.log(Object.getPrototypeOf(params).constructor.name);
+        return this.toJSON(params);
+    }
+
+/**
+* then post to "localhost:3000/api/post/123456/details/miao18game?query=sss&find=mmm" with body : 
+* {
+*   "name":"miao17game",
+*   "max":123
+* }
+*  
+* output: 
+* "this is a post method"
+* "123456 - miao18game - sss - mmm"
+* "numner - string - string - string"
+* "PostModel { _name: 'miao17game', _max: 123 }"
+* "PostModel"
+*
+* response : 
+* {
+*   "name":"miao17game",
+*   "max":123
+* }
+*
+* JsonResult will automatically transform static-type object to correct object-json with data contract, or you can transfoem manually with [TypedSerializer.ToJSON(obj)], if you create contract with decorators : @Serialization/@Deserialization.
+*/
 ```
 
 **Still in developing...**

@@ -4,6 +4,7 @@ import {
     Middleware, FromForm, FromBody, FormData
 } from "../../framework";
 import { SuperService } from "../services/main";
+import { PostModel } from "../models/main.model";
 
 @Controller("api")
 @Middleware([middleware01])
@@ -44,14 +45,14 @@ export class MainController extends BaseController {
         name: string,
         query: string,
         find: string,
-        @FromBody() params: any): JsonResult {
+        @FromBody() params: PostModel): JsonResult {
 
         console.log("this is a post method");
         console.log(`${id} - ${name} - ${query} - ${find}`);
-        const form = this.context.form;
-        console.log(form.data);
+        console.log(`${typeof id} - ${typeof name} - ${typeof query} - ${typeof find}`);
         console.log(params);
-        return this.toJSON({ params, id, name, query, find });
+        console.log(Object.getPrototypeOf(params).constructor.name);
+        return this.toJSON(params);
     }
 
 }

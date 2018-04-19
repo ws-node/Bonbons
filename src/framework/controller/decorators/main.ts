@@ -25,14 +25,13 @@ export function Controller(config?: string | IControllerConfig) {
  * @param ctrl controller prototype
  */
 function registerCompelete(meta: IControllerMetadata) {
+    // console.log(JSON.stringify(meta.router.routes, null, "\t"));
     Object.keys(meta.router.routes).map(key => meta.router.routes[key]).forEach(route => {
         if (!(route.path || "").startsWith("/")) {
             route.path = meta.router.prefix + route.path;
-        }
-        if (route.middleware && route.middleware.merge) {
+        } else if (route.middleware && route.middleware.merge) {
             route.middleware.list = [...meta.middlewares, ...route.middleware.list];
-        }
-        if (!route.middleware || !route.middleware.merge) {
+        } else if (!route.middleware) {
             route.middleware = { list: [...meta.middlewares], merge: false };
         }
     });

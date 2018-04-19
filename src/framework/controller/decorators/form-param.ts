@@ -7,7 +7,7 @@ import { reroute } from "./base";
 export function FormData();
 /** Get form message from body when default type is [multiple/form-data] */
 export function FormData(type: string);
-export function FormData(type?: string) { return formDecoratorFactory(type, "mutiple"); }
+export function FormData(type?: string) { return formDecoratorFactory(type, "multiple"); }
 
 /** Get form message from body when type is [application/json] */
 export function FromBody();

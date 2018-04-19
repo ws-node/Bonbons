@@ -8,6 +8,7 @@ import { IRoute, IMethodResult, IMidleware } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { BODY_PARSE_METADATA, createOptions, ConfigKey, IOptions, JSON_RESULT_OPTIONS } from "../metadata/config";
+import { Deserialize } from "../utils/bonbons-serialize";
 
 export class ExpressServer {
 
@@ -119,6 +120,7 @@ export class ExpressServer {
     private _registerControllers() {
         this._ctrls.forEach(ctrl => {
             const reflect = Reflection.GetControllerMetadata(ctrl.prototype);
+            // console.log(JSON.stringify(reflect, null, "\t"));
             const routes = Object.keys(reflect.router.routes).forEach(
                 key => this._registerRoutes(reflect.router.routes[key], ctrl, key));
         });
@@ -158,7 +160,10 @@ export class ExpressServer {
     private _parseFuncParams<T extends typeof BaseController>(constructor: T, req: Request, rep: Response, route: IRoute) {
         const context = bindContext(this._createInstance(constructor), req, rep);
         const querys = (route.funcParams || []).map(ele => ele.isQuery ? context.context.query(ele.key, ele.type) : context.context.param(ele.key, ele.type));
-        if (route.form && route.form.index >= 0) querys[route.form.index] = req.body;
+        if (route.form && route.form.index >= 0) {
+            const staticType = (route.funcParams || [])[route.form.index];
+            querys[route.form.index] = !!(staticType && staticType.type) ? Deserialize(req.body, staticType.type) : req.body;
+        }
         return { context, params: querys };
     }
 
@@ -177,7 +182,7 @@ export class ExpressServer {
     private _selectFormParser(route: IRoute, middlewares: IMidleware[]) {
         if (route.form && route.form.parser) {
             switch (route.form.parser) {
-                case "mutiple": middlewares.unshift(MultiplePartParser().any()); break;
+                case "multiple": middlewares.unshift(MultiplePartParser().any()); break;
                 case "json": middlewares.unshift(JSONParser(this.parseMeta.json)); break;
                 case "url": middlewares.unshift(URLEncodedParser(this.parseMeta.urlencoded)); break;
                 case "raw": middlewares.unshift(RawParser(this.parseMeta.raw)); break;
