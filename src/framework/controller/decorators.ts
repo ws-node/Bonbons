@@ -44,9 +44,9 @@ export function Route(path: string, query?: string[]) {
     return function <T extends BaseController>(target: T, propertyKey: string) {
         const querys: any[] = Reflect.getMetadata(PARAMS_META_KEY, target, propertyKey);
         const reflect = Reflection.GetControllerMetadata(target);
+        reroute(reflect, propertyKey, { path, funcParams: [] });
         const route = reflect.router.routes[propertyKey];
         const queryList = query || [];
-        reroute(reflect, propertyKey, { path, funcParams: [] });
         querys.forEach((q, index) => route.funcParams[index] = { key: <string>(queryList[index] || null), type: q === Object ? null : q });
         Reflection.SetControllerMetadata(target, reflect);
     };
