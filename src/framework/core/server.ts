@@ -5,7 +5,9 @@ import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
 import { IRoute, IMethodResult } from "../metadata";
-import { IBonbonsMetadata } from "../metadata/server";
+import { IBodyParseMetadata } from "../metadata/server";
+import { ConfigContainer } from "../config";
+import { BODY_PARSE_METADATA, createOptions, ConfigKey, IOptions, JSON_RESULT_OPTIONS } from "../metadata/config";
 
 export class ExpressServer {
 
@@ -14,7 +16,8 @@ export class ExpressServer {
      */
     public static Create() { return new ExpressServer(); }
 
-    private container = new DIContainer();
+    private di = new DIContainer();
+    private configs = new ConfigContainer();
 
     private _express = CreateExpress();
     /** The reference of express app. You can control this if you really want. */
@@ -23,10 +26,16 @@ export class ExpressServer {
     private _listen: number;
     private _ctrls: (typeof BaseController)[] = [];
 
-    private _metadata: IBonbonsMetadata;
+    /** the metadata for body-parser when nesessary. */
+    private get parseMeta(): IBodyParseMetadata {
+        return this.configs.get(BODY_PARSE_METADATA);
+    }
+    private set parseMeta(value: IBodyParseMetadata) {
+        this.configs.set(createOptions(BODY_PARSE_METADATA, value));
+    }
 
     constructor() {
-        this._metadata = defaultServerMetadata();
+        this.initDefaultOptions();
     }
 
     /**
@@ -44,7 +53,7 @@ export class ExpressServer {
     public injectable(provide?: any, classType?: any, type?: InjectScope): ExpressServer {
         if (!provide) return this;
         type = type || InjectScope.Singleton;
-        this.container.register(provide, classType || provide, type);
+        this.di.register(provide, classType || provide, type);
         return this;
     }
 
@@ -61,22 +70,33 @@ export class ExpressServer {
     }
 
     public confJSONConvert(option?: BodyParser.OptionsJson) {
-        this._metadata.bodyParseConfig.json = Object.assign(this._metadata.bodyParseConfig.json, option || {});
+        this.parseMeta.json = Object.assign(this.parseMeta.json, option || {});
         return this;
     }
 
     public confRawConvert(option?: BodyParser.Options) {
-        this._metadata.bodyParseConfig.raw = Object.assign(this._metadata.bodyParseConfig.raw, option || {});
+        this.parseMeta.raw = Object.assign(this.parseMeta.raw, option || {});
         return this;
     }
 
     public confTextConvert(option?: BodyParser.OptionsText) {
-        this._metadata.bodyParseConfig.text = Object.assign(this._metadata.bodyParseConfig.text, option || {});
+        this.parseMeta.text = Object.assign(this.parseMeta.text, option || {});
+        return this;
+    }
+
+    /** Change or set options when you want. With IOptions<K,V>. */
+    public useOptions<K extends ConfigKey, V>(options: IOptions<K, V>): ExpressServer;
+    /** Change or set options when you want. With key and value. */
+    public useOptions<K extends ConfigKey, V>(key: K, value: V): ExpressServer;
+    public useOptions<K extends ConfigKey, V>(...args: (IOptions<K, V> | K | V)[]): ExpressServer {
+        const [k, v] = args.length <= 1 ? ([(<any>args).key, (<any>args).value] as [K, V]) : ([...args] as [K, V]);
+        const oldValue = this.configs.get(k) || {};
+        this.configs.set(createOptions(k, Object.assign(oldValue, v || {})));
         return this;
     }
 
     public confEncodedConvert(option?: BodyParser.OptionsUrlencoded) {
-        this._metadata.bodyParseConfig.urlencoded = Object.assign(this._metadata.bodyParseConfig.urlencoded, option || {});
+        this.parseMeta.urlencoded = Object.assign(this.parseMeta.urlencoded, option || {});
         return this;
     }
 
@@ -86,9 +106,14 @@ export class ExpressServer {
     }
 
     public run(work: () => void) {
-        this.container.complete();
+        this.di.complete();
         this._registerControllers();
         this._express.listen(this._listen, work);
+    }
+
+    private initDefaultOptions() {
+        this.parseMeta = defaultServerMetadata();
+        this.useOptions(JSON_RESULT_OPTIONS, { indentation: true });
     }
 
     private _registerControllers() {
@@ -101,7 +126,7 @@ export class ExpressServer {
     }
 
     private _createInstance<T extends typeof BaseController>(constor: T): BaseController {
-        return new (<any>constor)(...this.container.resolveDeps(constor));
+        return new (<any>constor)(...this.di.resolveDeps(constor));
     }
 
     private _registerRoutes<T extends typeof BaseController>(route: IRoute, constructor: T, methodName: string) {
@@ -123,10 +148,10 @@ export class ExpressServer {
                 if (route.form && route.form.parser) {
                     switch (route.form.parser) {
                         case "mutiple": middlewares.unshift(MultiplePartParser().any()); break;
-                        case "json": middlewares.unshift(JSONParser(this._metadata.bodyParseConfig.json)); break;
-                        case "url": middlewares.unshift(URLEncodedParser(this._metadata.bodyParseConfig.urlencoded)); break;
-                        case "raw": middlewares.unshift(RawParser(this._metadata.bodyParseConfig.raw)); break;
-                        case "text": middlewares.unshift(TextParser(this._metadata.bodyParseConfig.text)); break;
+                        case "json": middlewares.unshift(JSONParser(this.parseMeta.json)); break;
+                        case "url": middlewares.unshift(URLEncodedParser(this.parseMeta.urlencoded)); break;
+                        case "raw": middlewares.unshift(RawParser(this.parseMeta.raw)); break;
+                        case "text": middlewares.unshift(TextParser(this.parseMeta.text)); break;
                         default: break;
                     }
                 }
@@ -137,7 +162,11 @@ export class ExpressServer {
                         querys[route.form.index] = req.body;
                     }
                     const result: IMethodResult | string = constructor.prototype[methodName].bind(context)(...querys);
-                    rep.send(result && result.toString());
+                    if (typeof result === "string") {
+                        rep.send(result);
+                    } else {
+                        rep.send(result && result.toString(this.configs));
+                    }
                 });
                 invoke(route.path, ...middlewares);
             });
@@ -145,14 +174,12 @@ export class ExpressServer {
 
 }
 
-function defaultServerMetadata(): IBonbonsMetadata {
+function defaultServerMetadata(): IBodyParseMetadata {
     return {
-        bodyParseConfig: {
-            json: defaultJsonOptions(),
-            raw: defaultRawOptions(),
-            text: defaultTextOptions(),
-            urlencoded: defaultURLEncodedOptions()
-        }
+        json: defaultJsonOptions(),
+        raw: defaultRawOptions(),
+        text: defaultTextOptions(),
+        urlencoded: defaultURLEncodedOptions()
     };
 }
 

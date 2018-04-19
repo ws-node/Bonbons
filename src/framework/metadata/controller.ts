@@ -1,4 +1,5 @@
 import { Request, Response } from "./core";
+import { IConfigContainer } from "./config";
 
 export type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 
@@ -35,7 +36,7 @@ export interface IControllerConfig {
 }
 
 export interface IMethodResult {
-    toString(): string;
+    toString(configs?: IConfigContainer): string;
 }
 
 export interface IControllerMetadata {

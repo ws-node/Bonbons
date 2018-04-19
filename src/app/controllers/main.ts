@@ -34,7 +34,7 @@ export class MainController extends BaseController {
         console.log("this is a api method with query id : " + this.context.query("id", Number));
         console.log("this is a api method with query select : " + this.context.query("select", Boolean));
         console.log("this is a api method with query notexist : " + this.context.query("notexist"));
-        return new JsonResult({ value: this.sup.print() });
+        return this.toJSON({ value: this.sup.print() });
     }
 
     @Method("POST")
@@ -45,7 +45,7 @@ export class MainController extends BaseController {
         const form = this.context.form;
         console.log(form.data);
         console.log(params);
-        return new JsonResult(params);
+        return this.toJSON(params);
     }
 
 }
