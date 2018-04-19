@@ -2,6 +2,7 @@ import { IController, IContext } from "../metadata/controller";
 import { IRoute } from "./../metadata/controller";
 import { Request, Response } from "../metadata";
 import { ControllerContext, HttpRequest, HttpResponse } from "./context";
+import { JsonResultOptions, JsonResult } from "./result";
 
 export type IBaseController = IController<HttpRequest, HttpResponse>;
 
@@ -17,6 +18,10 @@ export abstract class BaseController implements IBaseController {
     public get context(): ControllerContext { return this._context; }
 
     constructor() { }
+
+    protected toJSON(json: any, options?: JsonResultOptions): JsonResult {
+        return new JsonResult(json, options);
+    }
 
 }
 
