@@ -21,9 +21,10 @@ export interface IRoute {
     funcParams: Array<{
         key: string;
         type: any;
+        isQuery: boolean;
     }>;
     form: {
-        parser: "mutiple" | "json" | "url" | "raw" | "text";
+        parser: "multiple" | "json" | "url" | "raw" | "text";
         index: number;
         type?: string;
     };

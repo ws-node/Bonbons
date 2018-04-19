@@ -7,6 +7,7 @@ const injectable_1 = require("../metadata/injectable");
 const reflect_1 = require("../di/reflect");
 const config_1 = require("../config");
 const config_2 = require("../metadata/config");
+const bonbons_serialize_1 = require("../utils/bonbons-serialize");
 class ExpressServer {
     constructor() {
         this.di = new di_1.DIContainer();
@@ -89,6 +90,7 @@ class ExpressServer {
     _registerControllers() {
         this._ctrls.forEach(ctrl => {
             const reflect = reflect_1.Reflection.GetControllerMetadata(ctrl.prototype);
+            // console.log(JSON.stringify(reflect, null, "\t"));
             const routes = Object.keys(reflect.router.routes).forEach(key => this._registerRoutes(reflect.router.routes[key], ctrl, key));
         });
     }
@@ -96,59 +98,74 @@ class ExpressServer {
         return new constor(...this.di.resolveDeps(constor));
     }
     _registerRoutes(route, constructor, methodName) {
-        route.allowMethods.forEach(method => {
-            let invoke;
-            switch (method) {
-                case "GET":
-                case "POST":
-                case "PUT":
-                case "DELETE":
-                case "PATCH":
-                case "OPTIONS":
-                case "HEAD":
-                    invoke = (...args) => this._express[method.toLowerCase()](...args);
-                    break;
-                default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
-            }
+        route.allowMethods.forEach(m => {
             if (!route.path)
                 throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
+            const invoke = this._selectFuncMethod(m);
             const middlewares = (route.middleware && route.middleware.list) || [];
-            if (route.form && route.form.parser) {
-                switch (route.form.parser) {
-                    case "mutiple":
-                        middlewares.unshift(core_1.MultiplePartParser().any());
-                        break;
-                    case "json":
-                        middlewares.unshift(core_1.JSONParser(this.parseMeta.json));
-                        break;
-                    case "url":
-                        middlewares.unshift(core_1.URLEncodedParser(this.parseMeta.urlencoded));
-                        break;
-                    case "raw":
-                        middlewares.unshift(core_1.RawParser(this.parseMeta.raw));
-                        break;
-                    case "text":
-                        middlewares.unshift(core_1.TextParser(this.parseMeta.text));
-                        break;
-                    default: break;
-                }
-            }
-            middlewares.push((req, rep) => {
-                const context = controller_1.bindContext(this._createInstance(constructor), req, rep);
-                const querys = (route.funcParams || []).map(ele => context.context.query(ele.key, ele.type));
-                if (route.form && route.form.index >= 0) {
-                    querys[route.form.index] = req.body;
-                }
-                const result = constructor.prototype[methodName].bind(context)(...querys);
-                if (typeof result === "string") {
-                    rep.send(result);
-                }
-                else {
-                    rep.send(result && result.toString(this.configs));
-                }
-            });
+            this._selectFormParser(route, middlewares);
+            this._decideFinalStep(route, middlewares, constructor, methodName);
             invoke(route.path, ...middlewares);
         });
+    }
+    _selectFuncMethod(method) {
+        let invoke;
+        switch (method) {
+            case "GET":
+            case "POST":
+            case "PUT":
+            case "DELETE":
+            case "PATCH":
+            case "OPTIONS":
+            case "HEAD":
+                invoke = (...args) => this._express[method.toLowerCase()](...args);
+                break;
+            default: throw new Error(`invalid REST method registeration : the method [${method}] is not allowed.`);
+        }
+        return invoke;
+    }
+    _parseFuncParams(constructor, req, rep, route) {
+        const context = controller_1.bindContext(this._createInstance(constructor), req, rep);
+        const querys = (route.funcParams || []).map(ele => ele.isQuery ? context.context.query(ele.key, ele.type) : context.context.param(ele.key, ele.type));
+        if (route.form && route.form.index >= 0) {
+            const staticType = (route.funcParams || [])[route.form.index];
+            querys[route.form.index] = !!(staticType && staticType.type) ? bonbons_serialize_1.Deserialize(req.body, staticType.type) : req.body;
+        }
+        return { context, params: querys };
+    }
+    _decideFinalStep(route, middlewares, constructor, methodName) {
+        middlewares.push((req, rep) => {
+            const { context, params } = this._parseFuncParams(constructor, req, rep, route);
+            const result = constructor.prototype[methodName].bind(context)(...params);
+            if (typeof result === "string") {
+                rep.send(result);
+            }
+            else {
+                rep.send(result && result.toString(this.configs));
+            }
+        });
+    }
+    _selectFormParser(route, middlewares) {
+        if (route.form && route.form.parser) {
+            switch (route.form.parser) {
+                case "multiple":
+                    middlewares.unshift(core_1.MultiplePartParser().any());
+                    break;
+                case "json":
+                    middlewares.unshift(core_1.JSONParser(this.parseMeta.json));
+                    break;
+                case "url":
+                    middlewares.unshift(core_1.URLEncodedParser(this.parseMeta.urlencoded));
+                    break;
+                case "raw":
+                    middlewares.unshift(core_1.RawParser(this.parseMeta.raw));
+                    break;
+                case "text":
+                    middlewares.unshift(core_1.TextParser(this.parseMeta.text));
+                    break;
+                default: break;
+            }
+        }
     }
 }
 exports.ExpressServer = ExpressServer;

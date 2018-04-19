@@ -12,8 +12,10 @@ export declare class HttpRequest {
     private _form;
     readonly form: IFormData;
     constructor(_request: Request);
-    queryParam(key: string): string;
-    queryParam(key: string, type: any): any;
+    query(key: string): string;
+    query(key: string, type: any): any;
+    param(key: string): string;
+    param(key: string, type: any): any;
     formParam(key: string): string;
     formParam(key: string, type: any): any;
 }
@@ -38,4 +40,5 @@ export declare class ControllerContext implements IControllerContext {
      * @param type the type constructor wanted
      */
     query(key: string, type?: BaseCtor): any;
+    param(key: string, type?: BaseCtor): any;
 }

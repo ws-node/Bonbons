@@ -10,33 +10,14 @@ class HttpRequest {
     }
     get source() { return this._request; }
     get form() { return this._form; }
-    queryParam(key, type) {
-        const value = this._request.query[key] || null;
-        if (type && value) {
-            try {
-                return type(value);
-            }
-            catch (e) {
-                throw new Error(`Type convert failed : can't convert value [${value}] to [${type}]`);
-            }
-        }
-        else {
-            return value;
-        }
+    query(key, type) {
+        return convertTo(this._request.query[key] || null, type);
+    }
+    param(key, type) {
+        return convertTo(this._request.params[key] || null, type);
     }
     formParam(key, type) {
-        const value = this._request.params[key] || null;
-        if (type && value) {
-            try {
-                return type(value);
-            }
-            catch (e) {
-                throw new Error(`Type convert failed : can't convert value [${value}] to [${type}]`);
-            }
-        }
-        else {
-            return value;
-        }
+        return convertTo((this._request.body && (this._request.body[key])) || null, type);
     }
 }
 exports.HttpRequest = HttpRequest;
@@ -64,8 +45,24 @@ class ControllerContext {
      * @param type the type constructor wanted
      */
     query(key, type) {
-        return this.request.queryParam(key, type);
+        return this.request.query(key, type);
+    }
+    param(key, type) {
+        return this.request.param(key, type);
     }
 }
 exports.ControllerContext = ControllerContext;
+function convertTo(value, type) {
+    if (type && value) {
+        try {
+            return type(value);
+        }
+        catch (e) {
+            throw new Error(`Type convert failed : can't convert value [${value}] to [${type}]`);
+        }
+    }
+    else {
+        return value;
+    }
+}
 //# sourceMappingURL=context.js.map
