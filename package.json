@@ -1,6 +1,6 @@
 {
   "name": "bonbons",
-  "version": "1.0.5-beta",
+  "version": "1.0.6-beta",
   "description": "a static typed MVC framework with express and typescript",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

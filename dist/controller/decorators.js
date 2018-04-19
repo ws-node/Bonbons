@@ -32,9 +32,9 @@ function Route(path, query) {
     return function (target, propertyKey) {
         const querys = Reflect.getMetadata(__1.PARAMS_META_KEY, target, propertyKey);
         const reflect = reflect_1.Reflection.GetControllerMetadata(target);
+        reroute(reflect, propertyKey, { path, funcParams: [] });
         const route = reflect.router.routes[propertyKey];
         const queryList = query || [];
-        reroute(reflect, propertyKey, { path, funcParams: [] });
         querys.forEach((q, index) => route.funcParams[index] = { key: (queryList[index] || null), type: q === Object ? null : q });
         reflect_1.Reflection.SetControllerMetadata(target, reflect);
     };

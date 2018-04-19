@@ -1,5 +1,6 @@
 import { IController } from "../metadata/controller";
 import { ControllerContext, HttpRequest, HttpResponse } from "./context";
+import { JsonResultOptions, JsonResult } from "./result";
 export declare type IBaseController = IController<HttpRequest, HttpResponse>;
 /**
  * Abstract class for controllers. You should always extends this class to create your controller.
@@ -11,6 +12,7 @@ export declare abstract class BaseController implements IBaseController {
      */
     readonly context: ControllerContext;
     constructor();
+    protected toJSON(json: any, options?: JsonResultOptions): JsonResult;
 }
 /**
  * Bind the controller context so that you can access 'this' in all route methods.

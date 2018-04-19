@@ -6,4 +6,5 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __export(require("./core"));
 __export(require("./injectable"));
 __export(require("./reflect"));
+__export(require("./config"));
 //# sourceMappingURL=index.js.map

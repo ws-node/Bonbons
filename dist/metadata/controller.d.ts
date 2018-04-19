@@ -1,4 +1,5 @@
 import { Request, Response } from "./core";
+import { IConfigContainer } from "./config";
 export declare type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 export declare type ICommonMidleware = (request: Request, response: Response, next?: () => void) => void;
 export declare type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
@@ -31,7 +32,7 @@ export interface IControllerConfig {
     prefix?: string;
 }
 export interface IMethodResult {
-    toString(): string;
+    toString(configs?: IConfigContainer): string;
 }
 export interface IControllerMetadata {
     router: {

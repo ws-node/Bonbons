@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const context_1 = require("./context");
+const result_1 = require("./result");
 /**
  * Abstract class for controllers. You should always extends this class to create your controller.
  */
@@ -10,6 +11,9 @@ class BaseController {
      */
     get context() { return this._context; }
     constructor() { }
+    toJSON(json, options) {
+        return new result_1.JsonResult(json, options);
+    }
 }
 exports.BaseController = BaseController;
 /**

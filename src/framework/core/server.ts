@@ -119,7 +119,6 @@ export class ExpressServer {
     private _registerControllers() {
         this._ctrls.forEach(ctrl => {
             const reflect = Reflection.GetControllerMetadata(ctrl.prototype);
-            console.log(JSON.stringify(reflect));
             const routes = Object.keys(reflect.router.routes).forEach(
                 key => this._registerRoutes(reflect.router.routes[key], ctrl, key));
         });
