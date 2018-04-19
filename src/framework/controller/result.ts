@@ -1,5 +1,6 @@
 import { IMethodResult } from "../metadata/controller";
 import { ConfigKey, IConfigContainer, JSON_RESULT_OPTIONS } from "./../metadata/config";
+import { TypeCheck } from "../utils/type-check";
 
 export interface JsonResultResolver {
     (propertyKey: string): string;
@@ -31,12 +32,24 @@ export class JsonResult implements IMethodResult {
         }
         let json = this.json;
         if (this.options.resolver) {
-            const newJson = {};
             const resolver = this.options.resolver;
-            Object.keys(this.json || {}).forEach(key => newJson[resolver(key)] = this.json[key]);
-            json = newJson;
+            json = recursiveResolver(this.json, resolver);
         }
         return JSON.stringify(json, null, this.options.indentation ? "\t" : 0);
     }
 
+}
+
+function recursiveResolver(target: any, resolver: JsonResultResolver) {
+    let payload = {};
+    if (TypeCheck.IsObject(target)) {
+        for (const propKey in target || {}) {
+            payload[resolver(propKey)] = recursiveResolver(target[propKey], resolver);
+        }
+    } else if (TypeCheck.IsArray(target)) {
+        payload = (<any[]>target || []).map(i => recursiveResolver(i, resolver));
+    } else {
+        return target;
+    }
+    return payload;
 }
