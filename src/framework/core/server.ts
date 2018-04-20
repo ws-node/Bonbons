@@ -147,6 +147,7 @@ export class ExpressServer {
         const context = bindContext(this._createInstance(constructor), req, rep);
         const querys = (route.funcParams || []).map(ele => ele.isQuery ? context.context.query(ele.key, ele.type) : context.context.param(ele.key, ele.type));
         if (route.form && route.form.index >= 0) {
+            // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
             querys[route.form.index] = !!(staticType && staticType.type) ? TypedSerializer.FromObject(req.body, staticType.type) : req.body;
         }

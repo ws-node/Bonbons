@@ -41,6 +41,7 @@ export class MainController extends BaseController {
     @Method("POST")
     @Route("post/:id/details/:name", ["query", "find"])
     @Middleware([], false)
+    // @FromBody()
     public POSTIndex(
         id: number,
         name: string,
@@ -55,6 +56,7 @@ export class MainController extends BaseController {
         console.log(Object.getPrototypeOf(params).constructor.name);
         return this.toJSON({
             theParams: params,
+            // theParams: this.context.form.data,
             theName: name,
             theQuery: query,
             theId: id,

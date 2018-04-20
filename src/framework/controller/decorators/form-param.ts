@@ -50,9 +50,14 @@ export function TextBody(config?: string | BodyParser.OptionsText) {
 }
 
 function formDecoratorFactory(type: any, parser: string) {
-    return function <T extends BaseController>(target: T, propertyKey: string, index: number) {
-        if (index === undefined || index < 0) { return; }
+    return function <T extends BaseController>(target: T, propertyKey: string, index_descriptor: number | TypedPropertyDescriptor<T>) {
+        // if (index === undefined || index < 0) { return; }
+        const isParam = typeof index_descriptor === "number" && index_descriptor >= 0;
         const reflect = Reflection.GetControllerMetadata(target);
-        Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser, index } }));
+        if (isParam) {
+            Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser, index: <number>index_descriptor } }));
+        } else {
+            Reflection.SetControllerMetadata(target, reroute(reflect, propertyKey, { form: { type, parser } }));
+        }
     };
 }
