@@ -82,7 +82,7 @@ export class ControllerContext implements IControllerContext {
      * @param type the type constructor wanted
      */
     public query<T extends BaseCtor>(key: string, type?: T): T {
-        return this.request.query(key, type);
+        return this.request.query(key, <T>type);
     }
 
     /**
@@ -91,7 +91,7 @@ export class ControllerContext implements IControllerContext {
      * @param type the type constructor wanted
      */
     public param<T extends BaseCtor>(key: string, type?: T): T {
-        return this.request.param(key, type);
+        return this.request.param(key, <T>type);
     }
 
 }
