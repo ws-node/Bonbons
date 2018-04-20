@@ -15,7 +15,6 @@ export function createOptions<K extends ConfigKey, V extends any>(key: K, value:
     return ({ key, value });
 }
 
-export const BODY_PARSE_METADATA = Symbol("__bonbons:body_parser_metadata");
 export const BODY_JSON_PARSE = Symbol("__bonbons:body_json_parse");
 export const BODY_RAW_PARSE = Symbol("__bonbons:body_raw_parse");
 export const BODY_TEXT_PARSE = Symbol("__bonbons:body_text_parse");

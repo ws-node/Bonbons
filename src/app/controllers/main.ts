@@ -1,7 +1,8 @@
 import {
     Controller, BaseController, Method,
     Route, Request, JsonResult,
-    Middleware, FromForm, FromBody, FormData, JsonResultResolvers
+    Middleware, FromForm, FromBody,
+    FormData, JsonResultResolvers
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";

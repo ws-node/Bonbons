@@ -1,5 +1,15 @@
 import { DIContainer } from "../di";
-import { CreateExpress, Express, BodyParser, Response, Request, MultiplePartParser, JSONParser, URLEncodedParser, RawParser, TextParser } from "../metadata/core";
+import {
+    CreateExpress, Express, BodyParser,
+    Response, Request, MultiplePartParser,
+    JSONParser, URLEncodedParser, RawParser,
+    TextParser
+} from "../metadata/core";
+import {
+    createOptions, ConfigKey, IOptions,
+    JSON_RESULT_OPTIONS, BODY_JSON_PARSE, BODY_RAW_PARSE,
+    BODY_TEXT_PARSE, BODY_URLENCODED_PARSE
+} from "../metadata/config";
 import { BaseController, bindContext, JsonResultOptions } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
@@ -7,7 +17,6 @@ import { Reflection } from "../di/reflect";
 import { IRoute, IMethodResult, IMidleware } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
-import { BODY_PARSE_METADATA, createOptions, ConfigKey, IOptions, JSON_RESULT_OPTIONS, BODY_JSON_PARSE, BODY_RAW_PARSE, BODY_TEXT_PARSE, BODY_URLENCODED_PARSE } from "../metadata/config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
 
 export class ExpressServer {
