@@ -1,6 +1,8 @@
-import { serializeAs, deserializeAs, inheritSerialization, Serialize, Deserialize, INewable, ISerializable } from "cerialize";
+import { serializeAs, deserializeAs, inheritSerialization, INewable } from "cerialize";
 export declare class TypedSerializer {
     static ToJSON(obj: any, format?: boolean): string;
-    static FromJSON<T>(json: string, type?: Function | INewable<T> | ISerializable): T;
+    static FromJSON<T>(json: string, type?: INewable<T>): T;
+    static ToObject(obj: any, format?: boolean): any;
+    static FromObject<T>(json: any, type?: INewable<T>): T;
 }
-export { serializeAs as Serialization, deserializeAs as Deserialization, inheritSerialization as Extends, Serialize, Deserialize };
+export { serializeAs as Serialize, deserializeAs as Deserialize, inheritSerialization as Extends };

@@ -85,7 +85,7 @@ class ExpressServer {
     }
     initDefaultOptions() {
         this.parseMeta = defaultServerMetadata();
-        this.useOptions(config_2.JSON_RESULT_OPTIONS, { indentation: true });
+        this.useOptions(config_2.JSON_RESULT_OPTIONS, { indentation: true, staticType: false });
     }
     _registerControllers() {
         this._ctrls.forEach(ctrl => {
@@ -129,7 +129,7 @@ class ExpressServer {
         const querys = (route.funcParams || []).map(ele => ele.isQuery ? context.context.query(ele.key, ele.type) : context.context.param(ele.key, ele.type));
         if (route.form && route.form.index >= 0) {
             const staticType = (route.funcParams || [])[route.form.index];
-            querys[route.form.index] = !!(staticType && staticType.type) ? bonbons_serialize_1.Deserialize(req.body, staticType.type) : req.body;
+            querys[route.form.index] = !!(staticType && staticType.type) ? bonbons_serialize_1.TypedSerializer.FromObject(req.body, staticType.type) : req.body;
         }
         return { context, params: querys };
     }
