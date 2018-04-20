@@ -31,7 +31,7 @@ function Route(path, query) {
             const type = querys[pcount];
             route.funcParams.push({
                 key: $1,
-                type: type === Object ? null : type,
+                type: (type === Object || type === String) ? null : type,
                 isQuery: false
             });
             pcount += 1;
@@ -40,7 +40,7 @@ function Route(path, query) {
         const queryList = query || [];
         querys.slice(pcount).forEach((q, index) => route.funcParams.push({
             key: (queryList[index] || null),
-            type: q === Object ? null : q,
+            type: (q === Object || q === String) ? null : q,
             isQuery: true
         }));
         reflect_1.Reflection.SetControllerMetadata(target, reflect);

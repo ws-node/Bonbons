@@ -1,8 +1,7 @@
-/// <reference types="body-parser" />
-import { Express, BodyParser } from "../metadata/core";
+import { Express } from "../metadata/core";
+import { ConfigKey, IOptions } from "../metadata/config";
 import { BaseController } from "../controller";
 import { InjectScope } from "../metadata/injectable";
-import { ConfigKey, IOptions } from "../metadata/config";
 export declare class ExpressServer {
     /**
      * Create a new app.
@@ -15,8 +14,6 @@ export declare class ExpressServer {
     readonly app: Express;
     private _listen;
     private _ctrls;
-    /** the metadata for body-parser when nesessary. */
-    private parseMeta;
     constructor();
     /**
      * register a controller to application.
@@ -29,17 +26,13 @@ export declare class ExpressServer {
     scoped(provide?: any, classType?: any): ExpressServer;
     singleton(provide?: any): ExpressServer;
     singleton(provide?: any, classType?: any): ExpressServer;
-    confJSONConvert(option?: BodyParser.OptionsJson): this;
-    confRawConvert(option?: BodyParser.Options): this;
-    confTextConvert(option?: BodyParser.OptionsText): this;
     /** Change or set options when you want. With IOptions<K,V>. */
     useOptions<K extends ConfigKey, V>(options: IOptions<K, V>): ExpressServer;
     /** Change or set options when you want. With key and value. */
     useOptions<K extends ConfigKey, V>(key: K, value: V): ExpressServer;
-    confEncodedConvert(option?: BodyParser.OptionsUrlencoded): this;
     listen(port: number): this;
     run(work: () => void): void;
-    private initDefaultOptions();
+    private _initDefaultOptions();
     private _registerControllers();
     private _createInstance<T>(constor);
     private _registerRoutes<T>(route, constructor, methodName);

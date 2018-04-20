@@ -14,6 +14,9 @@ class BaseController {
     toJSON(json, options) {
         return new result_1.JsonResult(json, options);
     }
+    sleep(time) {
+        return new Promise((resolve) => setTimeout(resolve, time || 0));
+    }
 }
 exports.BaseController = BaseController;
 /**

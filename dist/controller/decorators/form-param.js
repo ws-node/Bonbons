@@ -21,12 +21,15 @@ function TextBody(config) {
 }
 exports.TextBody = TextBody;
 function formDecoratorFactory(type, parser) {
-    return function (target, propertyKey, index) {
-        if (index === undefined || index < 0) {
-            return;
-        }
+    return function (target, propertyKey, index_descriptor) {
+        const isParam = typeof index_descriptor === "number" && index_descriptor >= 0;
         const reflect = reflect_1.Reflection.GetControllerMetadata(target);
-        reflect_1.Reflection.SetControllerMetadata(target, base_1.reroute(reflect, propertyKey, { form: { type, parser, index } }));
+        if (isParam) {
+            reflect_1.Reflection.SetControllerMetadata(target, base_1.reroute(reflect, propertyKey, { form: { type, parser, index: index_descriptor } }));
+        }
+        else {
+            reflect_1.Reflection.SetControllerMetadata(target, base_1.reroute(reflect, propertyKey, { form: { type, parser } }));
+        }
     };
 }
 //# sourceMappingURL=form-param.js.map

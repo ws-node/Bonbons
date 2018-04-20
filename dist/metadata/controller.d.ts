@@ -35,6 +35,7 @@ export interface IControllerConfig {
 export interface IMethodResult {
     toString(configs?: IConfigContainer): string;
 }
+export declare type IResult = IMethodResult | Async<IMethodResult> | string;
 export interface IControllerMetadata {
     router: {
         routes: {
@@ -44,3 +45,4 @@ export interface IControllerMetadata {
     };
     middlewares: IMidleware[];
 }
+export declare type Async<T> = Promise<T>;

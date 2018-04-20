@@ -2,19 +2,19 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const di_1 = require("../di");
 const core_1 = require("../metadata/core");
+const config_1 = require("../metadata/config");
 const controller_1 = require("../controller");
 const injectable_1 = require("../metadata/injectable");
 const reflect_1 = require("../di/reflect");
-const config_1 = require("../config");
-const config_2 = require("../metadata/config");
+const config_2 = require("../config");
 const bonbons_serialize_1 = require("../utils/bonbons-serialize");
 class ExpressServer {
     constructor() {
         this.di = new di_1.DIContainer();
-        this.configs = new config_1.ConfigContainer();
+        this.configs = new config_2.ConfigContainer();
         this._express = core_1.CreateExpress();
         this._ctrls = [];
-        this.initDefaultOptions();
+        this._initDefaultOptions();
     }
     /**
      * Create a new app.
@@ -22,13 +22,6 @@ class ExpressServer {
     static Create() { return new ExpressServer(); }
     /** The reference of express app. You can control this if you really want. */
     get app() { return this._express; }
-    /** the metadata for body-parser when nesessary. */
-    get parseMeta() {
-        return this.configs.get(config_2.BODY_PARSE_METADATA);
-    }
-    set parseMeta(value) {
-        this.configs.set(config_2.createOptions(config_2.BODY_PARSE_METADATA, value));
-    }
     /**
      * register a controller to application.
      * @param ctrl
@@ -52,26 +45,10 @@ class ExpressServer {
     singleton(provide, classType) {
         return this.injectable(provide, classType, injectable_1.InjectScope.Singleton);
     }
-    confJSONConvert(option) {
-        this.parseMeta.json = Object.assign(this.parseMeta.json, option || {});
-        return this;
-    }
-    confRawConvert(option) {
-        this.parseMeta.raw = Object.assign(this.parseMeta.raw, option || {});
-        return this;
-    }
-    confTextConvert(option) {
-        this.parseMeta.text = Object.assign(this.parseMeta.text, option || {});
-        return this;
-    }
     useOptions(...args) {
         const [k, v] = args.length <= 1 ? [args.key, args.value] : [...args];
         const oldValue = this.configs.get(k) || {};
-        this.configs.set(config_2.createOptions(k, Object.assign(oldValue, v || {})));
-        return this;
-    }
-    confEncodedConvert(option) {
-        this.parseMeta.urlencoded = Object.assign(this.parseMeta.urlencoded, option || {});
+        this.configs.set(config_1.createOptions(k, Object.assign(oldValue, v || {})));
         return this;
     }
     listen(port) {
@@ -83,9 +60,13 @@ class ExpressServer {
         this._registerControllers();
         this._express.listen(this._listen, work);
     }
-    initDefaultOptions() {
-        this.parseMeta = defaultServerMetadata();
-        this.useOptions(config_2.JSON_RESULT_OPTIONS, { indentation: true, staticType: false });
+    //#region Private scope
+    _initDefaultOptions() {
+        this.useOptions(config_1.JSON_RESULT_OPTIONS, defaultJsonResultOptions());
+        this.useOptions(config_1.BODY_JSON_PARSE, defaultJsonOptions());
+        this.useOptions(config_1.BODY_TEXT_PARSE, defaultTextOptions());
+        this.useOptions(config_1.BODY_RAW_PARSE, defaultRawOptions());
+        this.useOptions(config_1.BODY_URLENCODED_PARSE, defaultURLEncodedOptions());
     }
     _registerControllers() {
         this._ctrls.forEach(ctrl => {
@@ -128,6 +109,7 @@ class ExpressServer {
         const context = controller_1.bindContext(this._createInstance(constructor), req, rep);
         const querys = (route.funcParams || []).map(ele => ele.isQuery ? context.context.query(ele.key, ele.type) : context.context.param(ele.key, ele.type));
         if (route.form && route.form.index >= 0) {
+            // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
             querys[route.form.index] = !!(staticType && staticType.type) ? bonbons_serialize_1.TypedSerializer.FromObject(req.body, staticType.type) : req.body;
         }
@@ -141,7 +123,14 @@ class ExpressServer {
                 rep.send(result);
             }
             else {
-                rep.send(result && result.toString(this.configs));
+                // rep.send(result && result.toString(this.configs));
+                const type = Object.getPrototypeOf(result).constructor;
+                if (type === Promise) {
+                    result.then(r => rep.send(r.toString(this.configs)));
+                }
+                else {
+                    rep.send(result.toString(this.configs));
+                }
             }
         });
     }
@@ -152,16 +141,16 @@ class ExpressServer {
                     middlewares.unshift(core_1.MultiplePartParser().any());
                     break;
                 case "json":
-                    middlewares.unshift(core_1.JSONParser(this.parseMeta.json));
+                    middlewares.unshift(core_1.JSONParser(this.configs.get(config_1.BODY_JSON_PARSE)));
                     break;
                 case "url":
-                    middlewares.unshift(core_1.URLEncodedParser(this.parseMeta.urlencoded));
+                    middlewares.unshift(core_1.URLEncodedParser(this.configs.get(config_1.BODY_URLENCODED_PARSE)));
                     break;
                 case "raw":
-                    middlewares.unshift(core_1.RawParser(this.parseMeta.raw));
+                    middlewares.unshift(core_1.RawParser(this.configs.get(config_1.BODY_RAW_PARSE)));
                     break;
                 case "text":
-                    middlewares.unshift(core_1.TextParser(this.parseMeta.text));
+                    middlewares.unshift(core_1.TextParser(this.configs.get(config_1.BODY_TEXT_PARSE)));
                     break;
                 default: break;
             }
@@ -169,13 +158,8 @@ class ExpressServer {
     }
 }
 exports.ExpressServer = ExpressServer;
-function defaultServerMetadata() {
-    return {
-        json: defaultJsonOptions(),
-        raw: defaultRawOptions(),
-        text: defaultTextOptions(),
-        urlencoded: defaultURLEncodedOptions()
-    };
+function defaultJsonResultOptions() {
+    return { indentation: true, staticType: false };
 }
 function defaultURLEncodedOptions() {
     return {
