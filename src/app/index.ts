@@ -7,6 +7,6 @@ Bonbons.Create()
     .singleton(SecService)
     .scoped(SuperService)
     .scoped(ABCService, MainService)
-    .useOptions(JSON_RESULT_OPTIONS, { indentation: true })
+    .useOptions(JSON_RESULT_OPTIONS, { indentation: true, staticType: true })
     .listen(3000)
     .run(() => console.log("Example app listening on port 3000"));

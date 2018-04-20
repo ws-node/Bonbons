@@ -8,7 +8,7 @@ import { IRoute, IMethodResult, IMidleware } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { BODY_PARSE_METADATA, createOptions, ConfigKey, IOptions, JSON_RESULT_OPTIONS } from "../metadata/config";
-import { Deserialize } from "../utils/bonbons-serialize";
+import { TypedSerializer } from "../utils/bonbons-serialize";
 
 export class ExpressServer {
 
@@ -114,7 +114,7 @@ export class ExpressServer {
 
     private initDefaultOptions() {
         this.parseMeta = defaultServerMetadata();
-        this.useOptions(JSON_RESULT_OPTIONS, { indentation: true });
+        this.useOptions(JSON_RESULT_OPTIONS, { indentation: true, staticType: false });
     }
 
     private _registerControllers() {
@@ -162,7 +162,7 @@ export class ExpressServer {
         const querys = (route.funcParams || []).map(ele => ele.isQuery ? context.context.query(ele.key, ele.type) : context.context.param(ele.key, ele.type));
         if (route.form && route.form.index >= 0) {
             const staticType = (route.funcParams || [])[route.form.index];
-            querys[route.form.index] = !!(staticType && staticType.type) ? Deserialize(req.body, staticType.type) : req.body;
+            querys[route.form.index] = !!(staticType && staticType.type) ? TypedSerializer.FromObject(req.body, staticType.type) : req.body;
         }
         return { context, params: querys };
     }

@@ -1,7 +1,7 @@
 import {
     Controller, BaseController, Method,
     Route, Request, JsonResult,
-    Middleware, FromForm, FromBody, FormData
+    Middleware, FromForm, FromBody, FormData, JsonResultResolvers
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";
@@ -52,7 +52,13 @@ export class MainController extends BaseController {
         console.log(`${typeof id} - ${typeof name} - ${typeof query} - ${typeof find}`);
         console.log(params);
         console.log(Object.getPrototypeOf(params).constructor.name);
-        return this.toJSON(params);
+        return this.toJSON({
+            theParams: params,
+            theName: name,
+            theQuery: query,
+            theId: id,
+            theFind: find
+        }, { resolver: JsonResultResolvers.decamalize });
     }
 
 }

@@ -209,20 +209,20 @@ export class MainController extends BaseController {
 #### 6.Multiple injections with POST/PUT
 ```TypeScript
 // create a static-type model to describe form structure:
-import { Serialization, Deserialization } from "./../../framework";
+import { Serialize, Deserialize } from "bonbons";
 
 // model to describe the form data structure
 export class PostModel {
 
     // data contract
-    @Serialization("name")
-    @Deserialization("name")
+    @Serialize("received_ame")
+    @Deserialize("NAME_TEST")
     private _name: string;
     public get Name() { return this._name; }
 
     // data contract and type convert
-    @Serialization(Number, "max")
-    @Deserialization(Number, "max")
+    @Serialize(Number, "receivedMax")
+    @Deserialize(Number, "MAX_TEST")
     private _max: number;
     public get MAX() { return this._max; }
 
@@ -244,14 +244,21 @@ export class PostModel {
         console.log(`${typeof id} - ${typeof name} - ${typeof query} - ${typeof find}`);
         console.log(params);
         console.log(Object.getPrototypeOf(params).constructor.name);
-        return this.toJSON(params);
+         return this.toJSON({
+            theParams: params,
+            theName: name,
+            theQuery: query,
+            theId: id,
+            theFind: find
+        }, { resolver: JsonResultResolvers.decamalize }); 
+        // use resolver to change object keys, this will work an the end of JSON.stringfy.
     }
 
 /**
 * then post to "localhost:3000/api/post/123456/details/miao18game?query=sss&find=mmm" with body : 
 * {
-*   "name":"miao17game",
-*   "max":123
+*   "NAME_TEST":"miao17game",
+*   "MAX_TEST":123
 * }
 *  
 * output: 
@@ -262,12 +269,22 @@ export class PostModel {
 * "PostModel"
 *
 * response : 
-* {
-*   "name":"miao17game",
-*   "max":123
-* }
+*   {
+*       "the_params": {
+*           "received_name": "miao17game", 
+*           // key is resolved by @Deserialize/@Serialize
+*           "received_max": 123  
+*           // key is resolved by @Deserialize/@Serialize and JsonResultResolvers.decamalize
+*       },
+*       "the_name": "miao18game",
+*       "the_query": "sss",
+*       "the_id": 123456,
+*       "the_find": "mmm"
+*   }
 *
-* JsonResult will automatically transform static-type object to correct object-json with data contract, or you can transfoem manually with [TypedSerializer.ToJSON(obj)], if you create contract with decorators : @Serialization/@Deserialization.
+* JsonResult will automatically transform static-type object to correct object-json with data contract, 
+* or you can transfoem manually with [TypedSerializer.ToJSON(obj)], 
+* if you create contract with decorators : @Serialize/@Deserialize.
 */
 ```
 

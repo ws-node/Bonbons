@@ -1,4 +1,9 @@
-import { serialize, deserialize, serializeAs, deserializeAs, inheritSerialization, Serialize, Deserialize, INewable, ISerializable } from "cerialize";
+import {
+    serialize, deserialize, serializeAs,
+    deserializeAs, inheritSerialization, Serialize,
+    Deserialize, INewable, ISerializable,
+    GenericDeserialize
+} from "cerialize";
 
 export class TypedSerializer {
 
@@ -7,16 +12,27 @@ export class TypedSerializer {
     }
 
     // tslint:disable-next-line:ban-types
-    public static FromJSON<T>(json: string, type?: Function | INewable<T> | ISerializable): T {
-        return Deserialize(JSON.parse(json), type) as T;
+    public static FromJSON<T>(json: string, type?: INewable<T>): T {
+        return !type ?
+            Deserialize(JSON.parse(json)) as T :
+            GenericDeserialize(JSON.parse(json), type) as T;
+    }
+
+    public static ToObject(obj: any, format = false): any {
+        return Serialize(obj);
+    }
+
+    // tslint:disable-next-line:ban-types
+    public static FromObject<T>(json: any, type?: INewable<T>): T {
+        return !type ?
+            Deserialize(json) as T :
+            GenericDeserialize(json, type) as T;
     }
 
 }
 
 export {
-    serializeAs as Serialization,
-    deserializeAs as Deserialization,
-    inheritSerialization as Extends,
-    Serialize,
-    Deserialize
+    serializeAs as Serialize,
+    deserializeAs as Deserialize,
+    inheritSerialization as Extends
 };
