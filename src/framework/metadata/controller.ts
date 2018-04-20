@@ -39,6 +39,8 @@ export interface IMethodResult {
     toString(configs?: IConfigContainer): string;
 }
 
+export type IResult = IMethodResult | Async<IMethodResult> | string;
+
 export interface IControllerMetadata {
     router: {
         routes: { [methodName: string]: IRoute }
@@ -46,3 +48,5 @@ export interface IControllerMetadata {
     };
     middlewares: IMidleware[];
 }
+
+export type Async<T> = Promise<T>;

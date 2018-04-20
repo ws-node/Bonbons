@@ -2,7 +2,7 @@ import {
     Controller, BaseController, Method,
     Route, Request, JsonResult,
     Middleware, FromForm, FromBody,
-    FormData, JsonResultResolvers
+    FormData, JsonResultResolvers, Async
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";
@@ -17,8 +17,19 @@ export class MainController extends BaseController {
 
     @Method("GET")
     @Route("/index")
-    public GetIndex(): string {
+    public async GetIndex(): Async<string> {
         console.log("this is a get method with base : ");
+        // async mock
+        await this.sleep(20);
+        console.log("step 01");
+        await this.sleep(20);
+        console.log("step 02");
+        await this.sleep(20);
+        console.log("step 03");
+        await this.sleep(20);
+        console.log("step 04");
+        await this.sleep(20);
+        console.log("step 05");
         return this.sup.print();
     }
 
@@ -41,7 +52,6 @@ export class MainController extends BaseController {
     @Method("POST")
     @Route("post/:id/details/:name", ["query", "find"])
     @Middleware([], false)
-    // @FromBody()
     public POSTIndex(
         id: number,
         name: string,
@@ -54,9 +64,11 @@ export class MainController extends BaseController {
         console.log(`${typeof id} - ${typeof name} - ${typeof query} - ${typeof find}`);
         console.log(params);
         console.log(Object.getPrototypeOf(params).constructor.name);
+        console.log(this.context.form.get("NAME_TEST"));
+        console.log(this.context.request.headers.get("content-type"));
         return this.toJSON({
+            theHeaders: this.context.request.headers.data,
             theParams: params,
-            // theParams: this.context.form.data,
             theName: name,
             theQuery: query,
             theId: id,

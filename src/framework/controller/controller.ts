@@ -1,4 +1,4 @@
-import { IController, IContext } from "../metadata/controller";
+import { IController, IContext, Async } from "../metadata/controller";
 import { IRoute } from "./../metadata/controller";
 import { Request, Response } from "../metadata";
 import { ControllerContext, HttpRequest, HttpResponse } from "./context";
@@ -21,6 +21,10 @@ export abstract class BaseController implements IBaseController {
 
     protected toJSON(json: any, options?: JsonResultOptions): JsonResult {
         return new JsonResult(json, options);
+    }
+
+    protected sleep(time: number): Async<void> {
+        return new Promise<void>((resolve) => setTimeout(resolve, time || 0));
     }
 
 }

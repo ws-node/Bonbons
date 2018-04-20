@@ -288,5 +288,29 @@ export class PostModel {
 */
 ```
 
+#### 7. Async method
+```TYPESCRIPT
+    @Method("GET")
+    @Route("/index")
+    public async GetIndex(): Async<string> {
+        console.log("this is a get method with base : ");
+        // async mock
+        await this.sleep(20);
+        console.log("step 01");
+        await this.sleep(20);
+        console.log("step 02");
+        await this.sleep(20);
+        console.log("step 03");
+        await this.sleep(20);
+        console.log("step 04");
+        await this.sleep(20);
+        console.log("step 05");
+        return this.sup.print();
+    }
+
+    // it works!
+    // Async<T> = Promise<T>, only an alias.
+```
+
 **Still in developing...**
 

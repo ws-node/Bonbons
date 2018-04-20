@@ -14,7 +14,7 @@ import { BaseController, bindContext, JsonResultOptions } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult, IMidleware } from "../metadata";
+import { IRoute, IMethodResult, IMidleware, IResult } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
@@ -157,11 +157,17 @@ export class ExpressServer {
     private _decideFinalStep<T extends typeof BaseController>(route: IRoute, middlewares: IMidleware[], constructor: T, methodName: string) {
         middlewares.push((req: Request, rep: Response) => {
             const { context, params } = this._parseFuncParams<T>(constructor, req, rep, route);
-            const result: IMethodResult | string = constructor.prototype[methodName].bind(context)(...params);
+            const result: IResult = constructor.prototype[methodName].bind(context)(...params);
             if (typeof result === "string") {
                 rep.send(result);
             } else {
-                rep.send(result && result.toString(this.configs));
+                // rep.send(result && result.toString(this.configs));
+                const type = Object.getPrototypeOf(result).constructor;
+                if (type === Promise) {
+                    (<Promise<IMethodResult>>result).then(r => rep.send(r.toString(this.configs)));
+                } else {
+                    rep.send((<IMethodResult>result).toString(this.configs));
+                }
             }
         });
     }

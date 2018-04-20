@@ -10,9 +10,16 @@ export interface IConstructor<T> {
     new(...args: any[]): T;
 }
 
-export interface IRequestForm {
-    data: any;
+export interface IConvertable {
     get<T extends BaseCtor>(key: string, type?: IConstructor<T>): T;
+}
+
+export interface IRequestForm extends IConvertable {
+    data: any;
+}
+
+export interface IHeaders extends IConvertable {
+    data: any;
 }
 
 export class HttpRequest {
@@ -23,10 +30,17 @@ export class HttpRequest {
     private _form: IRequestForm;
     public get form() { return this._form; }
 
+    private _headers: IHeaders;
+    public get headers() { return this._headers; }
+
     constructor(private _request: Request) {
         this._form = {
             data: this._request.body,
-            get: this._formParam.bind(this)
+            get: this._transform.bind(this, this._request.body)
+        };
+        this._headers = {
+            data: this._request.headers,
+            get: this._transform.bind(this, this._request.headers)
         };
     }
 
@@ -46,10 +60,10 @@ export class HttpRequest {
         return convertTo(this._request.params[key] || null, type);
     }
 
-    private _formParam(key: string): string;
-    private _formParam<T extends BaseCtor>(key: string, type: IConstructor<T>): T;
-    private _formParam<T extends BaseCtor>(key: string, type?: IConstructor<T>): T {
-        return convertTo((this._request.body && (this._request.body[key])) || null, type);
+    private _transform(source: any, key: string): string;
+    private _transform<T extends BaseCtor>(source: any, key: string, type: IConstructor<T>): T;
+    private _transform<T extends BaseCtor>(source: any, key: string, type?: IConstructor<T>): T {
+        return convertTo((source && (source[key])) || null, type);
     }
 
 }

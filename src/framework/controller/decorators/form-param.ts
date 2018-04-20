@@ -51,7 +51,6 @@ export function TextBody(config?: string | BodyParser.OptionsText) {
 
 function formDecoratorFactory(type: any, parser: string) {
     return function <T extends BaseController>(target: T, propertyKey: string, index_descriptor: number | TypedPropertyDescriptor<T>) {
-        // if (index === undefined || index < 0) { return; }
         const isParam = typeof index_descriptor === "number" && index_descriptor >= 0;
         const reflect = Reflection.GetControllerMetadata(target);
         if (isParam) {
