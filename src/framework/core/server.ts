@@ -1,13 +1,13 @@
 import { DIContainer } from "../di";
 import { CreateExpress, Express, BodyParser, Response, Request, MultiplePartParser, JSONParser, URLEncodedParser, RawParser, TextParser } from "../metadata/core";
-import { BaseController, bindContext } from "../controller";
+import { BaseController, bindContext, JsonResultOptions } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
 import { IRoute, IMethodResult, IMidleware } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
-import { BODY_PARSE_METADATA, createOptions, ConfigKey, IOptions, JSON_RESULT_OPTIONS } from "../metadata/config";
+import { BODY_PARSE_METADATA, createOptions, ConfigKey, IOptions, JSON_RESULT_OPTIONS, BODY_JSON_PARSE, BODY_RAW_PARSE, BODY_TEXT_PARSE, BODY_URLENCODED_PARSE } from "../metadata/config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
 
 export class ExpressServer {
@@ -27,16 +27,8 @@ export class ExpressServer {
     private _listen: number;
     private _ctrls: (typeof BaseController)[] = [];
 
-    /** the metadata for body-parser when nesessary. */
-    private get parseMeta(): IBodyParseMetadata {
-        return this.configs.get(BODY_PARSE_METADATA);
-    }
-    private set parseMeta(value: IBodyParseMetadata) {
-        this.configs.set(createOptions(BODY_PARSE_METADATA, value));
-    }
-
     constructor() {
-        this.initDefaultOptions();
+        this._initDefaultOptions();
     }
 
     /**
@@ -70,21 +62,6 @@ export class ExpressServer {
         return this.injectable(provide, classType, InjectScope.Singleton);
     }
 
-    public confJSONConvert(option?: BodyParser.OptionsJson) {
-        this.parseMeta.json = Object.assign(this.parseMeta.json, option || {});
-        return this;
-    }
-
-    public confRawConvert(option?: BodyParser.Options) {
-        this.parseMeta.raw = Object.assign(this.parseMeta.raw, option || {});
-        return this;
-    }
-
-    public confTextConvert(option?: BodyParser.OptionsText) {
-        this.parseMeta.text = Object.assign(this.parseMeta.text, option || {});
-        return this;
-    }
-
     /** Change or set options when you want. With IOptions<K,V>. */
     public useOptions<K extends ConfigKey, V>(options: IOptions<K, V>): ExpressServer;
     /** Change or set options when you want. With key and value. */
@@ -93,11 +70,6 @@ export class ExpressServer {
         const [k, v] = args.length <= 1 ? ([(<any>args).key, (<any>args).value] as [K, V]) : ([...args] as [K, V]);
         const oldValue = this.configs.get(k) || {};
         this.configs.set(createOptions(k, Object.assign(oldValue, v || {})));
-        return this;
-    }
-
-    public confEncodedConvert(option?: BodyParser.OptionsUrlencoded) {
-        this.parseMeta.urlencoded = Object.assign(this.parseMeta.urlencoded, option || {});
         return this;
     }
 
@@ -112,9 +84,14 @@ export class ExpressServer {
         this._express.listen(this._listen, work);
     }
 
-    private initDefaultOptions() {
-        this.parseMeta = defaultServerMetadata();
-        this.useOptions(JSON_RESULT_OPTIONS, { indentation: true, staticType: false });
+    //#region Private scope
+
+    private _initDefaultOptions() {
+        this.useOptions(JSON_RESULT_OPTIONS, defaultJsonResultOptions());
+        this.useOptions(BODY_JSON_PARSE, defaultJsonOptions());
+        this.useOptions(BODY_TEXT_PARSE, defaultTextOptions());
+        this.useOptions(BODY_RAW_PARSE, defaultRawOptions());
+        this.useOptions(BODY_URLENCODED_PARSE, defaultURLEncodedOptions());
     }
 
     private _registerControllers() {
@@ -183,24 +160,21 @@ export class ExpressServer {
         if (route.form && route.form.parser) {
             switch (route.form.parser) {
                 case "multiple": middlewares.unshift(MultiplePartParser().any()); break;
-                case "json": middlewares.unshift(JSONParser(this.parseMeta.json)); break;
-                case "url": middlewares.unshift(URLEncodedParser(this.parseMeta.urlencoded)); break;
-                case "raw": middlewares.unshift(RawParser(this.parseMeta.raw)); break;
-                case "text": middlewares.unshift(TextParser(this.parseMeta.text)); break;
+                case "json": middlewares.unshift(JSONParser(this.configs.get(BODY_JSON_PARSE))); break;
+                case "url": middlewares.unshift(URLEncodedParser(this.configs.get(BODY_URLENCODED_PARSE))); break;
+                case "raw": middlewares.unshift(RawParser(this.configs.get(BODY_RAW_PARSE))); break;
+                case "text": middlewares.unshift(TextParser(this.configs.get(BODY_TEXT_PARSE))); break;
                 default: break;
             }
         }
     }
 
+    //#endregion
+
 }
 
-function defaultServerMetadata(): IBodyParseMetadata {
-    return {
-        json: defaultJsonOptions(),
-        raw: defaultRawOptions(),
-        text: defaultTextOptions(),
-        urlencoded: defaultURLEncodedOptions()
-    };
+function defaultJsonResultOptions(): JsonResultOptions {
+    return { indentation: true, staticType: false };
 }
 
 function defaultURLEncodedOptions(): BodyParser.OptionsUrlencoded {

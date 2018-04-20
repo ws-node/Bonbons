@@ -11,7 +11,7 @@ export type IBaseController = IController<HttpRequest, HttpResponse>;
  */
 export abstract class BaseController implements IBaseController {
 
-    protected _context: ControllerContext;
+    private _context: ControllerContext;
     /**
      * Context for this controller, different request has different context.
      */

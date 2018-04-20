@@ -5,40 +5,45 @@ export type BaseCtor = typeof Number | typeof Boolean | typeof String | typeof O
 
 export type IControllerContext = IContext<HttpRequest, HttpResponse>;
 
-export interface IFormData {
+export interface IRequestForm {
     data: any;
-    get(key: string, type?: any): any;
+    get<T>(key: string, type?: T): T;
 }
 
 export class HttpRequest {
 
+    /** represent the express req. */
     public get source(): Request { return this._request; }
 
-    private _form: IFormData;
+    private _form: IRequestForm;
     public get form() { return this._form; }
 
     constructor(private _request: Request) {
         this._form = {
             data: this._request.body,
-            get: this.formParam.bind(this)
+            get: this._formParam.bind(this)
         };
     }
 
+    /** get query value by key name as <String> */
     public query(key: string): string;
-    public query(key: string, type: any): any;
-    public query(key: string, type?: any) {
+    /** get query value by key name and convert to <Type> */
+    public query<T extends BaseCtor>(key: string, type: T): T;
+    public query<T extends BaseCtor>(key: string, type?: T): T {
         return convertTo(this._request.query[key] || null, type);
     }
 
+    /** get route param value by key name as <String> */
     public param(key: string): string;
-    public param(key: string, type: any): any;
-    public param(key: string, type?: any) {
+    /** get route param value by key name and convert to <Type> */
+    public param<T extends BaseCtor>(key: string, type: T): T;
+    public param<T extends BaseCtor>(key: string, type?: T): T {
         return convertTo(this._request.params[key] || null, type);
     }
 
-    public formParam(key: string): string;
-    public formParam(key: string, type: any): any;
-    public formParam(key: string, type?: any) {
+    private _formParam(key: string): string;
+    private _formParam<T extends BaseCtor>(key: string, type: T): T;
+    private _formParam<T extends BaseCtor>(key: string, type?: T): T {
         return convertTo((this._request.body && (this._request.body[key])) || null, type);
     }
 
@@ -46,6 +51,7 @@ export class HttpRequest {
 
 export class HttpResponse {
 
+    /** represent the express rep. */
     public get source(): Response { return this._response; }
 
     constructor(private _response: Response) { }
@@ -75,11 +81,16 @@ export class ControllerContext implements IControllerContext {
      * @param key the query param key
      * @param type the type constructor wanted
      */
-    public query(key: string, type?: BaseCtor) {
+    public query<T extends BaseCtor>(key: string, type?: T): T {
         return this.request.query(key, type);
     }
 
-    public param(key: string, type?: BaseCtor) {
+    /**
+     * Try read a route param from request with key.
+     * @param key the route param key
+     * @param type the type constructor wanted
+     */
+    public param<T extends BaseCtor>(key: string, type?: T): T {
         return this.request.param(key, type);
     }
 
