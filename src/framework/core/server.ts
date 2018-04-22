@@ -107,9 +107,9 @@ export class ExpressServer {
      * @param key
      * @param value
      */
-    public useOptions<V>(key: ConfigKey<any>, value: V): ExpressServer;
-    public useOptions<V>(...args: (IOptions<V> | ConfigKey<any> | V)[]): ExpressServer {
-        const [k, v] = args.length <= 1 ? ([(<any>args).key, (<any>args).value] as [ConfigKey<any>, V]) : ([...args] as [ConfigKey<any>, V]);
+    public useOptions<V>(key: ConfigKey<V>, value: V): ExpressServer;
+    public useOptions<V>(...args: (IOptions<V> | ConfigKey<V> | V)[]): ExpressServer {
+        const [k, v] = args.length <= 1 ? ([(<any>args).key, (<any>args).value] as [ConfigKey<V>, V]) : ([...args] as [ConfigKey<V>, V]);
         const isFromClass = TypeCheck.isFromCustomClass(v); // check if the v is the instance of a custom class
         this.configs.set(createOptions(k, isFromClass ? v : Object.assign(this.configs.get(k) || {}, v || {})));
         return this;

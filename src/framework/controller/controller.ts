@@ -14,15 +14,25 @@ export abstract class BaseController implements IBaseController {
     private _context: ControllerContext;
     /**
      * Context for this controller, different request has different context.
+     * @readonly
      */
     public get context(): ControllerContext { return this._context; }
 
     constructor() { }
 
+    /**
+     * Returns in JSON format, and supports the use of options to configure serialization behavior
+     * @param json object you want to serialize
+     * @param options to configure serialization behavior
+     */
     protected toJSON(json: any, options?: JsonResultOptions): JsonResult {
         return new JsonResult(json, options);
     }
 
+    /**
+     * Let the current execution sleep for a certain period of time
+     * @param time
+     */
     protected sleep(time: number): Async<void> {
         return new Promise<void>((resolve) => setTimeout(resolve, time || 0));
     }
