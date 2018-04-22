@@ -7,17 +7,18 @@ import {
 } from "../metadata/core";
 import {
     createOptions, ConfigKey, IOptions,
-    JSON_RESULT_OPTIONS, BODY_JSON_PARSE, BODY_RAW_PARSE,
-    BODY_TEXT_PARSE, BODY_URLENCODED_PARSE
+    JSON_RESULT_OPTIONS, BODY_JSON_PARSER, BODY_RAW_PARSER,
+    BODY_TEXT_PARSER, BODY_URLENCODED_PARSER, STATIC_TYPED_RESOLVER
 } from "../metadata/config";
-import { BaseController, bindContext, JsonResultOptions } from "../controller";
+import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult, IMidleware, IResult } from "../metadata";
+import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
+import { TypeCheck } from "../utils/type-check";
 
 export class ExpressServer {
 
@@ -36,13 +37,16 @@ export class ExpressServer {
     private _listen: number;
     private _ctrls: (typeof BaseController)[] = [];
 
+    private get staticResolver() { return this.configs.get(STATIC_TYPED_RESOLVER); }
+
     constructor() {
+        this._initDefaultInjections();
         this._initDefaultOptions();
     }
 
     /**
      * register a controller to application.
-     * @param ctrl
+     * @param ctrl the constructor of your controller class
      */
     public controller<T extends typeof BaseController>(ctrl: any) {
         if (!ctrl) return this;
@@ -50,35 +54,64 @@ export class ExpressServer {
         return this;
     }
 
-    public injectable(provide?: any, type?: InjectScope): ExpressServer;
-    public injectable(provide?: any, classType?: any, type?: InjectScope): ExpressServer;
-    public injectable(provide?: any, classType?: any, type?: InjectScope): ExpressServer {
+    private injectable(provide: any, type: InjectScope): ExpressServer;
+    private injectable(provide: any, classType: any, type?: InjectScope): ExpressServer;
+    private injectable(provide: any, classType?: any, type?: InjectScope): ExpressServer {
         if (!provide) return this;
         type = type || InjectScope.Singleton;
         this.di.register(provide, classType || provide, type);
         return this;
     }
 
-    public scoped(provide?: any): ExpressServer;
-    public scoped(provide?: any, classType?: any): ExpressServer;
-    public scoped(provide?: any, classType?: any): ExpressServer {
+    /**
+     * Register a scoped service, and scoped services remain unique in each request scope.
+     * @param provide the ClassType you want to inject
+     */
+    public scoped(provide: any): ExpressServer;
+    /**
+     * Register a scoped service, and scoped services remain unique in each request scope.
+     * @param provide the abstract class you want to get the injectiton
+     * @param classType the ClassType you want to inject
+     */
+    public scoped(provide: any, classType: any): ExpressServer;
+    public scoped(provide: any, classType?: any): ExpressServer {
         return this.injectable(provide, classType, InjectScope.Scoped);
     }
 
-    public singleton(provide?: any): ExpressServer;
-    public singleton(provide?: any, classType?: any): ExpressServer;
-    public singleton(provide?: any, classType?: any): ExpressServer {
+    /**
+     * Register a singleton service that is unique throughout the application lifecycle.
+     * It should be noted that regardless of whether a singleton service's dependencies are singletons or scopes, they will remain unique.
+     * @param provide the ClassType you want to inject
+     */
+    public singleton(provide: any): ExpressServer;
+    /**
+     * Register a singleton service that is unique throughout the application lifecycle.
+     * It should be noted that regardless of whether a singleton service's dependencies are singletons or scopes, they will remain unique.
+     * @param provide the abstract class you want to get the injectiton
+     * @param classType the ClassType you want to inject
+     */
+    public singleton(provide: any, classType: any): ExpressServer;
+    public singleton(provide: any, classType?: any): ExpressServer {
         return this.injectable(provide, classType, InjectScope.Singleton);
     }
 
-    /** Change or set options when you want. With IOptions<K,V>. */
-    public useOptions<K extends ConfigKey, V>(options: IOptions<K, V>): ExpressServer;
-    /** Change or set options when you want. With key and value. */
-    public useOptions<K extends ConfigKey, V>(key: K, value: V): ExpressServer;
-    public useOptions<K extends ConfigKey, V>(...args: (IOptions<K, V> | K | V)[]): ExpressServer {
-        const [k, v] = args.length <= 1 ? ([(<any>args).key, (<any>args).value] as [K, V]) : ([...args] as [K, V]);
-        const oldValue = this.configs.get(k) || {};
-        this.configs.set(createOptions(k, Object.assign(oldValue, v || {})));
+    /**
+     * Add a configuration item for application or modification.
+     * It is worth noting that members instantiated from a custom type will replace the old configuration members rather than being merged.
+     * @param options IOption<V>
+     */
+    public useOptions<V>(options: IOptions<V>): ExpressServer;
+    /**
+     * Add a configuration item for application or modification.
+     * It is worth noting that members instantiated from a custom type will replace the old configuration members rather than being merged.
+     * @param key
+     * @param value
+     */
+    public useOptions<V>(key: ConfigKey<any>, value: V): ExpressServer;
+    public useOptions<V>(...args: (IOptions<V> | ConfigKey<any> | V)[]): ExpressServer {
+        const [k, v] = args.length <= 1 ? ([(<any>args).key, (<any>args).value] as [ConfigKey<any>, V]) : ([...args] as [ConfigKey<any>, V]);
+        const isFromClass = TypeCheck.isFromCustomClass(v); // check if the v is the instance of a custom class
+        this.configs.set(createOptions(k, isFromClass ? v : Object.assign(this.configs.get(k) || {}, v || {})));
         return this;
     }
 
@@ -95,12 +128,17 @@ export class ExpressServer {
 
     //#region Private scope
 
+    private _initDefaultInjections() {
+        this.singleton(ConfigContainer, this.configs);
+    }
+
     private _initDefaultOptions() {
         this.useOptions(JSON_RESULT_OPTIONS, defaultJsonResultOptions());
-        this.useOptions(BODY_JSON_PARSE, defaultJsonOptions());
-        this.useOptions(BODY_TEXT_PARSE, defaultTextOptions());
-        this.useOptions(BODY_RAW_PARSE, defaultRawOptions());
-        this.useOptions(BODY_URLENCODED_PARSE, defaultURLEncodedOptions());
+        this.useOptions(BODY_JSON_PARSER, defaultJsonOptions());
+        this.useOptions(BODY_TEXT_PARSER, defaultTextOptions());
+        this.useOptions(BODY_RAW_PARSER, defaultRawOptions());
+        this.useOptions(BODY_URLENCODED_PARSER, defaultURLEncodedOptions());
+        this.useOptions(STATIC_TYPED_RESOLVER, TypedSerializer);
     }
 
     private _registerControllers() {
@@ -149,7 +187,7 @@ export class ExpressServer {
         if (route.form && route.form.index >= 0) {
             // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
-            querys[route.form.index] = !!(staticType && staticType.type) ? TypedSerializer.FromObject(req.body, staticType.type) : req.body;
+            querys[route.form.index] = !!(staticType && staticType.type) ? this.staticResolver.FromObject(req.body, staticType.type) : req.body;
         }
         return { context, params: querys };
     }
@@ -176,10 +214,10 @@ export class ExpressServer {
         if (route.form && route.form.parser) {
             switch (route.form.parser) {
                 case "multiple": middlewares.unshift(MultiplePartParser().any()); break;
-                case "json": middlewares.unshift(JSONParser(this.configs.get(BODY_JSON_PARSE))); break;
-                case "url": middlewares.unshift(URLEncodedParser(this.configs.get(BODY_URLENCODED_PARSE))); break;
-                case "raw": middlewares.unshift(RawParser(this.configs.get(BODY_RAW_PARSE))); break;
-                case "text": middlewares.unshift(TextParser(this.configs.get(BODY_TEXT_PARSE))); break;
+                case "json": middlewares.unshift(JSONParser(this.configs.get(BODY_JSON_PARSER))); break;
+                case "url": middlewares.unshift(URLEncodedParser(this.configs.get(BODY_URLENCODED_PARSER))); break;
+                case "raw": middlewares.unshift(RawParser(this.configs.get(BODY_RAW_PARSER))); break;
+                case "text": middlewares.unshift(TextParser(this.configs.get(BODY_TEXT_PARSER))); break;
                 default: break;
             }
         }

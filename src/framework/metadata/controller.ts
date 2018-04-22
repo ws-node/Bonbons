@@ -36,7 +36,7 @@ export interface IControllerConfig {
 }
 
 export interface IMethodResult {
-    toString(configs?: IConfigContainer): string;
+    toString(configs: IConfigContainer): string;
 }
 
 export type IResult = IMethodResult | Async<IMethodResult> | string;
@@ -50,3 +50,13 @@ export interface IControllerMetadata {
 }
 
 export type Async<T> = Promise<T>;
+
+export interface JsonResultResolver {
+    (propertyKey: string): string;
+}
+
+export interface JsonResultOptions {
+    indentation?: boolean;
+    resolver?: JsonResultResolver;
+    staticType?: boolean;
+}

@@ -2,7 +2,8 @@ import {
     Controller, BaseController, Method,
     Route, Request, JsonResult,
     Middleware, FromForm, FromBody,
-    FormData, JsonResultResolvers, Async
+    FormData, JsonResultResolvers, Async,
+    ConfigContainer
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";
@@ -11,7 +12,7 @@ import { PostModel } from "../models/main.model";
 @Middleware([middleware01])
 export class MainController extends BaseController {
 
-    constructor(private sup: SuperService) {
+    constructor(private sup: SuperService, private configs: ConfigContainer) {
         super();
     }
 

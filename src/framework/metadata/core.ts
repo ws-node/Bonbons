@@ -31,3 +31,7 @@ export {
     urlencoded as URLEncodedParser,
     multerFn as MultiplePartParser
 };
+
+export interface IConstructor<T> {
+    new(...args: any[]): T;
+}

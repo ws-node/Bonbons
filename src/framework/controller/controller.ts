@@ -1,8 +1,8 @@
-import { IController, IContext, Async } from "../metadata/controller";
+import { IController, IContext, Async, JsonResultOptions } from "../metadata/controller";
 import { IRoute } from "./../metadata/controller";
 import { Request, Response } from "../metadata";
 import { ControllerContext, HttpRequest, HttpResponse } from "./context";
-import { JsonResultOptions, JsonResult } from "./result";
+import { JsonResult } from "./result";
 
 export type IBaseController = IController<HttpRequest, HttpResponse>;
 

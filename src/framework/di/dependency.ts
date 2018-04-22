@@ -16,8 +16,10 @@ export class DependencyQueue {
         const found = this.queue.find(i => i.el === el);
         if (found) return;
         deps = deps || [];
+        const registerValue = realel || el;
+        const isConstructor = !!registerValue.prototype;
         scope = scope || InjectScope.Singleton;
-        this.queue.push({ el, realel: realel || el, deps, scope });
+        this.queue.push({ el, realel: registerValue, deps, scope: isConstructor ? scope : InjectScope.Singleton });
     }
 
     public sort(): DeptNode[] {

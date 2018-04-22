@@ -7,10 +7,25 @@ function isArray(target: any) {
     return Object.prototype.toString.call(target) === "[object Array]";
 }
 
-export class TypeCheck {
+function getPrototypeConstructor(obj) {
+    const proto = Object.getPrototypeOf(obj);
+    return proto && proto.constructor;
+}
 
-    public static IsObject(target: any) { return isObject(target); }
+function isCustomClassInstance(obj) {
+    return getPrototypeConstructor(obj) !== Object;
+}
 
-    public static IsArray(target: any) { return isArray(target); }
+export class TypeCheckCreator {
+
+    public IsObject(target: any) { return isObject(target); }
+
+    public IsArray(target: any) { return isArray(target); }
+
+    public getClass(target: any) { return getPrototypeConstructor(target); }
+
+    public isFromCustomClass(target: any) { return isCustomClassInstance(target); }
 
 }
+
+export const TypeCheck = new TypeCheckCreator();

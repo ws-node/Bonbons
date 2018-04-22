@@ -1,14 +1,10 @@
-import { Request, Response } from "./../metadata";
+import { Request, Response, IConstructor } from "./../metadata";
 import { IContext } from "../metadata/controller";
 
 // tslint:disable-next-line:ban-types
 export type BaseCtor = Number | Boolean | String;
 
 export type IControllerContext = IContext<HttpRequest, HttpResponse>;
-
-export interface IConstructor<T> {
-    new(...args: any[]): T;
-}
 
 export interface IConvertable {
     get<T extends BaseCtor>(key: string, type?: IConstructor<T>): T;

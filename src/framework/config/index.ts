@@ -2,14 +2,14 @@ import { ConfigKey, IOptions, IConfigContainer } from "../metadata/config";
 
 export class ConfigContainer implements IConfigContainer {
 
-    private maps = new Map<ConfigKey, any>();
+    private maps = new Map<symbol, any>();
 
-    public set<K extends ConfigKey, V>(options: IOptions<K, V>) {
-        this.maps.set(options.key, options.value);
+    public set<V>(options: IOptions<V>) {
+        this.maps.set(options.key.key, options.value);
     }
 
-    public get(key: ConfigKey) {
-        return this.maps.get(key) || null;
+    public get<V>(key: ConfigKey<V>): V {
+        return this.maps.get(key && key.key) || null;
     }
 
 }
