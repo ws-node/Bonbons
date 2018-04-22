@@ -1,6 +1,6 @@
-import { Request, Response } from "./../metadata";
+import { Request, Response, ICommonMidleware } from "./../metadata";
 
-export function NewXPoweredBy(value: string): (req: Request, rep: Response, next) => void {
+export function NewXPoweredBy(value: string): ICommonMidleware {
     return function (req: Request, rep: Response, next) {
         rep.setHeader("x-powered-by", value);
         next();
