@@ -81,3 +81,8 @@ export interface JsonResultOptions {
     /** Whether to enable static type processing according to a serialization contract */
     staticType?: boolean;
 }
+
+export interface StringResultOptions {
+    fromEncoding?: string;
+    toEncoding?: string;
+}

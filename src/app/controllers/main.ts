@@ -3,7 +3,8 @@ import {
     Route, Request, JsonResult,
     Middleware, FromForm, FromBody,
     FormData, JsonResultResolvers, Async,
-    ConfigContainer
+    ConfigContainer,
+    StringResult
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";
@@ -18,7 +19,7 @@ export class MainController extends BaseController {
 
     @Method("GET")
     @Route("/index")
-    public async GetIndex(): Async<string> {
+    public async GetIndex(): Async<StringResult> {
         console.log("this is a get method with base : ");
         // async mock
         await this.sleep(20);
@@ -31,7 +32,7 @@ export class MainController extends BaseController {
         console.log("step 04");
         await this.sleep(20);
         console.log("step 05");
-        return this.sup.print();
+        return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { fromEncoding: "GBK" });
     }
 
     @Method("GET", "POST")

@@ -1,8 +1,8 @@
-import { IController, IContext, Async, JsonResultOptions } from "../metadata/controller";
+import { IController, IContext, Async, JsonResultOptions, StringResultOptions } from "../metadata/controller";
 import { IRoute } from "./../metadata/controller";
 import { Request, Response } from "../metadata";
 import { ControllerContext, HttpRequest, HttpResponse } from "./context";
-import { JsonResult } from "./result";
+import { JsonResult, StringResult } from "./result";
 
 export type IBaseController = IController<HttpRequest, HttpResponse>;
 
@@ -27,6 +27,10 @@ export abstract class BaseController implements IBaseController {
      */
     protected toJSON(json: any, options?: JsonResultOptions): JsonResult {
         return new JsonResult(json, options);
+    }
+
+    protected toStringfy(str: string, options?: StringResultOptions): StringResult {
+        return new StringResult(str, options);
     }
 
     /**

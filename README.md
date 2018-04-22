@@ -12,7 +12,7 @@ npm install bonbons --save
 
 ## How it works?
 #### 1. Create a service and register
-```TypeScript
+```JavaScript
 @Injectabe()
 export class SecService {
     constructor() {}
@@ -30,7 +30,7 @@ Bonbons.Create().singleton(SecService);
 ```
 
 #### 2. Create a controller and register 
-```TypeScript
+```JavaScript
 @Controller("api")
 export class MainController extends BaseController {
 
@@ -78,7 +78,7 @@ Bonbons.Create()
 ```
 
 #### 3. Use ABC to split dependency
-```TypeScript
+```JavaScript
 // define a ABC
 export abstract class ABCService {
     public abstract getMessage(): string;
@@ -125,7 +125,7 @@ export class SuperService {
 ```
 
 #### 4. Add middlewares for route or controller
-```TypeScript
+```JavaScript
 // first create middleware in pure function format.
 function middleware01(r, rs, next) {
     console.log("123456");
@@ -174,7 +174,7 @@ export class MainController extends BaseController {
 ```
 
 #### 5. Form control
-```TypeScript
+```JavaScript
 // there are two ways to access the form data
     @Method("POST")
     @Route("post")
@@ -207,7 +207,7 @@ export class MainController extends BaseController {
 ```
 
 #### 6.Multiple injections with POST/PUT
-```TypeScript
+```JavaScript
 // create a static-type model to describe form structure:
 import { Serialize, Deserialize } from "bonbons";
 
@@ -285,11 +285,14 @@ export class PostModel {
 * JsonResult will automatically transform static-type object to correct object-json with data contract, 
 * or you can transfoem manually with [TypedSerializer.ToJSON(obj)], 
 * if you create contract with decorators : @Serialize/@Deserialize.
+* 
+* Of cource, you can define your own static-typed serialization behavior, 
+* only create your serializer implements the IStaticTypedResolver
 */
 ```
 
 #### 7. Async method
-```TYPESCRIPT
+```JavaScript
     @Method("GET")
     @Route("/index")
     public async GetIndex(): Async<string> {
@@ -310,6 +313,22 @@ export class PostModel {
 
     // it works!
     // Async<T> = Promise<T>, only an alias.
+```
+
+#### 8. String encoding support
+```JavaScript
+    @Method("GET")
+    @Route("/index")
+    public async GetIndex(): StringResult {
+        console.log("this is a get method with base : ");
+        return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { fromEncoding: "GBK" });
+        // defaults:
+        // fromEncoding: "utf8"
+        // toEncoding: "utf8"
+    }
+
+    // response:
+    // "woshinidie : 我是你爹"
 ```
 
 **Still in developing...**

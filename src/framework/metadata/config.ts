@@ -1,6 +1,6 @@
 import { IStaticTypedResolver } from "./static";
 import { BodyParser } from "./core";
-import { JsonResultOptions } from "./controller";
+import { JsonResultOptions, StringResultOptions } from "./controller";
 
 /** configuration container interface */
 export interface IConfigContainer {
@@ -38,3 +38,4 @@ export const BODY_TEXT_PARSER = createConfigKey<BodyParser.OptionsText>("body_te
 export const BODY_URLENCODED_PARSER = createConfigKey<BodyParser.OptionsUrlencoded>("body_urlencoded_parse");
 export const STATIC_TYPED_RESOLVER = createConfigKey<IStaticTypedResolver>("static_typed_resolver");
 export const JSON_RESULT_OPTIONS = createConfigKey<JsonResultOptions>("json_result_options");
+export const STRING_RESULT_OPTIONS = createConfigKey<StringResultOptions>("string_result_options");

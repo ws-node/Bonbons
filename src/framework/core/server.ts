@@ -8,13 +8,13 @@ import {
 import {
     createOptions, ConfigKey, IOptions,
     JSON_RESULT_OPTIONS, BODY_JSON_PARSER, BODY_RAW_PARSER,
-    BODY_TEXT_PARSER, BODY_URLENCODED_PARSER, STATIC_TYPED_RESOLVER
+    BODY_TEXT_PARSER, BODY_URLENCODED_PARSER, STATIC_TYPED_RESOLVER, STRING_RESULT_OPTIONS
 } from "../metadata/config";
 import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions } from "../metadata";
+import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
@@ -133,6 +133,7 @@ export class ExpressServer {
     }
 
     private _initDefaultOptions() {
+        this.useOptions(STRING_RESULT_OPTIONS, defaultStringResultOptions());
         this.useOptions(JSON_RESULT_OPTIONS, defaultJsonResultOptions());
         this.useOptions(BODY_JSON_PARSER, defaultJsonOptions());
         this.useOptions(BODY_TEXT_PARSER, defaultTextOptions());
@@ -225,6 +226,10 @@ export class ExpressServer {
 
     //#endregion
 
+}
+
+function defaultStringResultOptions(): StringResultOptions {
+    return { fromEncoding: "utf8", toEncoding: "utf8" };
 }
 
 function defaultJsonResultOptions(): JsonResultOptions {
