@@ -32,6 +32,9 @@ export class TypedSerializerCreator implements IStaticTypedResolver {
 
 }
 
+/**
+ * Bonbons built-in static type contract serialization tool (based on cerialize)
+ */
 export const TypedSerializer = new TypedSerializerCreator();
 
 export {

@@ -8,7 +8,7 @@ import { getDependencies } from "../di/reflect";
  */
 export function Injectabe(config?) {
     return function <T extends { prototype: any }>(target: T) {
-        // Do Nothing
+        // Do Nothing, only enable the reflect metadata
         return target;
     };
 }

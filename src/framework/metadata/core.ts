@@ -32,6 +32,7 @@ export {
     multerFn as MultiplePartParser
 };
 
+/** Represents a class's constructor */
 export interface IConstructor<T> {
     new(...args: any[]): T;
 }
