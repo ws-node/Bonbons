@@ -8,6 +8,7 @@ export type IBaseController = IController<HttpRequest, HttpResponse>;
 
 /**
  * Abstract class for controllers. You should always extends this class to create your controller.
+ * @abstract
  */
 export abstract class BaseController implements IBaseController {
 
@@ -29,6 +30,11 @@ export abstract class BaseController implements IBaseController {
         return new JsonResult(json, options);
     }
 
+    /**
+     * Returns the body of a string. You can use the encoding of the options configuration string, etc.
+     * @param str string
+     * @param options to configure behavior
+     */
     protected toStringfy(str: string, options?: StringResultOptions): StringResult {
         return new StringResult(str, options);
     }
@@ -36,6 +42,7 @@ export abstract class BaseController implements IBaseController {
     /**
      * Let the current execution sleep for a certain period of time
      * @param time
+     * @async
      */
     protected sleep(time: number): Async<void> {
         return new Promise<void>((resolve) => setTimeout(resolve, time || 0));

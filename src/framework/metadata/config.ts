@@ -39,3 +39,4 @@ export const BODY_URLENCODED_PARSER = createConfigKey<BodyParser.OptionsUrlencod
 export const STATIC_TYPED_RESOLVER = createConfigKey<IStaticTypedResolver>("static_typed_resolver");
 export const JSON_RESULT_OPTIONS = createConfigKey<JsonResultOptions>("json_result_options");
 export const STRING_RESULT_OPTIONS = createConfigKey<StringResultOptions>("string_result_options");
+export const X_POWERED_BY = createConfigKey<string>("x-powered-by");

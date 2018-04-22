@@ -10,12 +10,46 @@ export interface IConvertable {
     get<T extends BaseCtor>(key: string, type?: IConstructor<T>): T;
 }
 
-export interface IRequestForm extends IConvertable {
-    data: any;
+export interface IReadable extends IConvertable {
+    readonly data: any;
 }
 
-export interface IHeaders extends IConvertable {
-    data: any;
+export interface IWritable extends IReadable {
+    set(key: string, value: any): void;
+}
+
+export class ReadableSource implements IReadable {
+
+    public get data() {
+        return this._method ?
+            this._data[this._method]() :
+            (this._data || {});
+    }
+
+    constructor(private _data: { [key: string]: any }, private _method?: string) { }
+
+    public get<T extends BaseCtor>(key: string, type?: IConstructor<T>): T {
+        return this._transform(this.data, key, <IConstructor<T>>type);
+    }
+
+    protected _transform(source: any, key: string): string;
+    protected _transform<T extends BaseCtor>(source: any, key: string, type: IConstructor<T>): T;
+    protected _transform<T extends BaseCtor>(source: any, key: string, type?: IConstructor<T>): T {
+        return convertTo((source && (source[key])) || null, type);
+    }
+
+}
+
+export class WritableSource extends ReadableSource implements IWritable {
+
+    constructor(_data: { [key: string]: any }, _method?: string) {
+        super(_data, _method);
+    }
+
+    set(key: string, value: any): void {
+        throw new Error("Method not implemented.");
+    }
+
 }
 
 export class HttpRequest {
@@ -23,21 +57,15 @@ export class HttpRequest {
     /** represent the express req. */
     public get source(): Request { return this._request; }
 
-    private _form: IRequestForm;
+    private _form: IReadable;
     public get form() { return this._form; }
 
-    private _headers: IHeaders;
+    private _headers: IReadable;
     public get headers() { return this._headers; }
 
     constructor(private _request: Request) {
-        this._form = {
-            data: this._request.body,
-            get: this._transform.bind(this, this._request.body)
-        };
-        this._headers = {
-            data: this._request.headers,
-            get: this._transform.bind(this, this._request.headers)
-        };
+        this._form = new ReadableSource(this._request.body);
+        this._headers = new ReadableSource(this._request.headers);
     }
 
     /** get query value by key name as <String> */
@@ -56,12 +84,6 @@ export class HttpRequest {
         return convertTo(this._request.params[key] || null, type);
     }
 
-    private _transform(source: any, key: string): string;
-    private _transform<T extends BaseCtor>(source: any, key: string, type: IConstructor<T>): T;
-    private _transform<T extends BaseCtor>(source: any, key: string, type?: IConstructor<T>): T {
-        return convertTo((source && (source[key])) || null, type);
-    }
-
 }
 
 export class HttpResponse {
@@ -69,7 +91,16 @@ export class HttpResponse {
     /** represent the express rep. */
     public get source(): Response { return this._response; }
 
-    constructor(private _response: Response) { }
+    private _headers: IWritable;
+    public get headers() { return this._headers; }
+
+    constructor(private _response: Response) {
+        this._headers = {
+            get data() { return Object.assign({}, _response.getHeaders()); },
+            get: <T>(key: string, type?: IConstructor<T>) => convertTo(this._headers.data[key] || null, type),
+            set: (key: string, value) => this._response.setHeader(key, value)
+        };
+    }
 
 }
 

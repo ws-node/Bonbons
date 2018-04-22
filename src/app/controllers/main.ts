@@ -13,7 +13,7 @@ import { PostModel } from "../models/main.model";
 @Middleware([middleware01])
 export class MainController extends BaseController {
 
-    constructor(private sup: SuperService, private configs: ConfigContainer) {
+    constructor(private sup: SuperService) {
         super();
     }
 
@@ -68,8 +68,13 @@ export class MainController extends BaseController {
         console.log(Object.getPrototypeOf(params).constructor.name);
         console.log(this.context.form.get("NAME_TEST"));
         console.log(this.context.request.headers.get("content-type"));
+
+        console.log(this.context.response.headers.get("x-powered-by"));
+        console.log(this.context.response.headers.set("woshinidie", true));
+
         return this.toJSON({
-            theHeaders: this.context.request.headers.data,
+            theRequestHeaders: this.context.request.headers.data,
+            theResponseHeaders: this.context.response.headers.data,
             theParams: params,
             theName: name,
             theQuery: query,

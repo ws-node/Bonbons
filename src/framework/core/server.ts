@@ -8,7 +8,7 @@ import {
 import {
     createOptions, ConfigKey, IOptions,
     JSON_RESULT_OPTIONS, BODY_JSON_PARSER, BODY_RAW_PARSER,
-    BODY_TEXT_PARSER, BODY_URLENCODED_PARSER, STATIC_TYPED_RESOLVER, STRING_RESULT_OPTIONS
+    BODY_TEXT_PARSER, BODY_URLENCODED_PARSER, STATIC_TYPED_RESOLVER, STRING_RESULT_OPTIONS, X_POWERED_BY
 } from "../metadata/config";
 import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
@@ -19,6 +19,7 @@ import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
 import { TypeCheck } from "../utils/type-check";
+import { NewXPoweredBy } from "../middlewares";
 
 export class ExpressServer {
 
@@ -122,6 +123,7 @@ export class ExpressServer {
 
     public run(work: () => void) {
         this.di.complete();
+        this._initDefaultMiddlewares();
         this._registerControllers();
         this._express.listen(this._listen, work);
     }
@@ -133,6 +135,7 @@ export class ExpressServer {
     }
 
     private _initDefaultOptions() {
+        this.useOptions(X_POWERED_BY, "Bonbons:1.0.0-beta");
         this.useOptions(STRING_RESULT_OPTIONS, defaultStringResultOptions());
         this.useOptions(JSON_RESULT_OPTIONS, defaultJsonResultOptions());
         this.useOptions(BODY_JSON_PARSER, defaultJsonOptions());
@@ -140,6 +143,10 @@ export class ExpressServer {
         this.useOptions(BODY_RAW_PARSER, defaultRawOptions());
         this.useOptions(BODY_URLENCODED_PARSER, defaultURLEncodedOptions());
         this.useOptions(STATIC_TYPED_RESOLVER, TypedSerializer);
+    }
+
+    private _initDefaultMiddlewares() {
+        this._express.use(NewXPoweredBy(this.configs.get(X_POWERED_BY)));
     }
 
     private _registerControllers() {
