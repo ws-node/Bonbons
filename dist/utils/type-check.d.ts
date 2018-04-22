@@ -1,4 +1,7 @@
-export declare class TypeCheck {
-    static IsObject(target: any): boolean;
-    static IsArray(target: any): boolean;
+export declare class TypeCheckCreator {
+    IsObject(target: any): boolean;
+    IsArray(target: any): boolean;
+    getClass(target: any): any;
+    isFromCustomClass(target: any): boolean;
 }
+export declare const TypeCheck: TypeCheckCreator;

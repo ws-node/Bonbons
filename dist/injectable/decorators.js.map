@@ -1,1 +1,1 @@
-{"version":3,"file":"decorators.js","sourceRoot":"","sources":["../../src/framework/injectable/decorators.ts"],"names":[],"mappings":";;AAAA,4BAA0B;AAI1B;;;GAGG;AACH,mBAA0B,MAAO;IAC7B,MAAM,CAAC,UAAwC,MAAS;QACpD,aAAa;QACb,MAAM,CAAC,MAAM,CAAC;IAClB,CAAC,CAAC;AACN,CAAC;AALD,8BAKC"}
+{"version":3,"file":"decorators.js","sourceRoot":"","sources":["../../src/framework/injectable/decorators.ts"],"names":[],"mappings":";;AAAA,4BAA0B;AAI1B;;;GAGG;AACH,mBAA0B,MAAO;IAC7B,MAAM,CAAC,UAAwC,MAAS;QACpD,+CAA+C;QAC/C,MAAM,CAAC,MAAM,CAAC;IAClB,CAAC,CAAC;AACN,CAAC;AALD,8BAKC"}

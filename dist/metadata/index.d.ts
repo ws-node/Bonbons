@@ -4,3 +4,4 @@ export * from "./injectable";
 export * from "./reflect";
 export * from "./config";
 export * from "./server";
+export * from "./static";

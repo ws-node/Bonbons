@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+/** Enumerate the registration of a service */
 var InjectScope;
 (function (InjectScope) {
     InjectScope["Singleton"] = "__singleton";

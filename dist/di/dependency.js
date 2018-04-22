@@ -11,8 +11,10 @@ class DependencyQueue {
         if (found)
             return;
         deps = deps || [];
+        const registerValue = realel || el;
+        const isConstructor = !!registerValue.prototype;
         scope = scope || injectable_1.InjectScope.Singleton;
-        this.queue.push({ el, realel: realel || el, deps, scope });
+        this.queue.push({ el, realel: registerValue, deps, scope: isConstructor ? scope : injectable_1.InjectScope.Singleton });
     }
     sort() {
         this.sections[0] = this.queue.filter(i => i.deps.length === 0);

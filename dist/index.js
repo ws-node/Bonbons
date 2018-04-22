@@ -7,5 +7,7 @@ __export(require("./controller"));
 __export(require("./injectable"));
 __export(require("./core"));
 __export(require("./metadata"));
+__export(require("./config"));
+__export(require("./middlewares"));
 __export(require("./utils/bonbons-serialize"));
 //# sourceMappingURL=index.js.map

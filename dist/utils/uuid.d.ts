@@ -1,3 +1,4 @@
-export declare class UUID {
-    static Create(): string;
+export declare class UUIDConstructor {
+    Create(): string;
 }
+export declare const UUID: UUIDConstructor;

@@ -7,7 +7,7 @@ require("reflect-metadata");
  */
 function Injectabe(config) {
     return function (target) {
-        // Do Nothing
+        // Do Nothing, only enable the reflect metadata
         return target;
     };
 }

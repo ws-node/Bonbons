@@ -11,6 +11,7 @@ export interface IContext<REQ, REP> {
 export interface IController<REQ, REP> {
     context: IContext<REQ, REP>;
 }
+/** The route's metadata. */
 export interface IRoute {
     path: string;
     allowMethods: AllowMethod[];
@@ -32,10 +33,17 @@ export interface IRoute {
 export interface IControllerConfig {
     prefix?: string;
 }
+/**
+ * Defines the return type of the custom routing method. The custom routing method return type needs to implement this interface
+ */
 export interface IMethodResult {
-    toString(configs?: IConfigContainer): string;
+    toString(configs: IConfigContainer): string;
 }
+/** Represents the return type of the controller routing method */
 export declare type IResult = IMethodResult | Async<IMethodResult> | string;
+/**
+ * The controller's metadata. Record some design information that needs to be retrieved at runtime
+ */
 export interface IControllerMetadata {
     router: {
         routes: {
@@ -45,4 +53,29 @@ export interface IControllerMetadata {
     };
     middlewares: IMidleware[];
 }
+/**
+ * Represents an asynchronous process and is used as an alias for a Promise
+ */
 export declare type Async<T> = Promise<T>;
+/** Handle JSON keys ,return a new key to replace old one for each.
+ * @input old key
+ * @output new key
+ */
+export interface JsonResultResolver {
+    (propertyKey: string): string;
+}
+/**
+ * JSON serialization configuration. Provides fine-grained control over the behavior of JsonResult during serialization
+ */
+export interface JsonResultOptions {
+    /** Whether to enable indentation */
+    indentation?: boolean;
+    /** Handle JSON keys ,return a new key to replace old one for each */
+    resolver?: JsonResultResolver;
+    /** Whether to enable static type processing according to a serialization contract */
+    staticType?: boolean;
+}
+export interface StringResultOptions {
+    fromEncoding?: string;
+    toEncoding?: string;
+}

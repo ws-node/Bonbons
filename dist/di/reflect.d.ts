@@ -1,7 +1,8 @@
 import { IControllerMetadata } from "../metadata/controller";
 export declare function getDependencies(target: any): any[];
-export declare class Reflection {
-    static GetInjections(target: any): any[];
-    static GetControllerMetadata(target: any): IControllerMetadata;
-    static SetControllerMetadata(target: any, meta: IControllerMetadata): void;
+export declare class ReflectionConstructor {
+    GetInjections(target: any): any[];
+    GetControllerMetadata(target: any): IControllerMetadata;
+    SetControllerMetadata(target: any, meta: IControllerMetadata): void;
 }
+export declare const Reflection: ReflectionConstructor;

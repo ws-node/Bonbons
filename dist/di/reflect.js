@@ -5,16 +5,17 @@ function getDependencies(target) {
     return Reflect.getMetadata(reflect_1.PARAMS_META_KEY, target) || [];
 }
 exports.getDependencies = getDependencies;
-class Reflection {
-    static GetInjections(target) {
+class ReflectionConstructor {
+    GetInjections(target) {
         return getDependencies(target);
     }
-    static GetControllerMetadata(target) {
+    GetControllerMetadata(target) {
         return Reflect.getMetadata(reflect_1.CTOR_META_KEY, target) || { router: { prefix: "/", routes: {} }, middlewares: [] };
     }
-    static SetControllerMetadata(target, meta) {
+    SetControllerMetadata(target, meta) {
         Reflect.defineMetadata(reflect_1.CTOR_META_KEY, meta, target);
     }
 }
-exports.Reflection = Reflection;
+exports.ReflectionConstructor = ReflectionConstructor;
+exports.Reflection = new ReflectionConstructor();
 //# sourceMappingURL=reflect.js.map

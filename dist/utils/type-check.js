@@ -6,9 +6,19 @@ function isObject(target) {
 function isArray(target) {
     return Object.prototype.toString.call(target) === "[object Array]";
 }
-class TypeCheck {
-    static IsObject(target) { return isObject(target); }
-    static IsArray(target) { return isArray(target); }
+function getPrototypeConstructor(obj) {
+    const proto = Object.getPrototypeOf(obj);
+    return proto && proto.constructor;
 }
-exports.TypeCheck = TypeCheck;
+function isCustomClassInstance(obj) {
+    return getPrototypeConstructor(obj) !== Object;
+}
+class TypeCheckCreator {
+    IsObject(target) { return isObject(target); }
+    IsArray(target) { return isArray(target); }
+    getClass(target) { return getPrototypeConstructor(target); }
+    isFromCustomClass(target) { return isCustomClassInstance(target); }
+}
+exports.TypeCheckCreator = TypeCheckCreator;
+exports.TypeCheck = new TypeCheckCreator();
 //# sourceMappingURL=type-check.js.map

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const config_1 = require("../../metadata/config");
-const bonbons_serialize_1 = require("../../utils/bonbons-serialize");
 const type_check_1 = require("../../utils/type-check");
 const formater_1 = require("../../utils/formater");
 /**
@@ -16,10 +15,11 @@ class JsonResult {
         if (configs) {
             this.options = Object.assign(configs.get(config_1.JSON_RESULT_OPTIONS) || {}, this.options);
         }
-        let json = bonbons_serialize_1.TypedSerializer.ToObject(this.json);
+        const staticResolver = configs.get(config_1.STATIC_TYPED_RESOLVER);
+        let json = (staticResolver && staticResolver.ToObject(this.json)) || this.json;
         if (this.options.resolver) {
             const resolver = this.options.resolver;
-            json = recursiveResolver(this.json, resolver);
+            json = recursiveResolver(this.json, resolver, staticResolver);
         }
         return JSON.stringify(json, null, this.options.indentation ? "\t" : 0);
     }
@@ -34,15 +34,15 @@ class JsonResultResolvers {
     }
 }
 exports.JsonResultResolvers = JsonResultResolvers;
-function recursiveResolver(target, resolver) {
+function recursiveResolver(target, resolver, staticRv) {
     let payload = {};
     if (type_check_1.TypeCheck.IsObject(target)) {
         for (const propKey in target || {}) {
-            payload[resolver(propKey)] = recursiveResolver(bonbons_serialize_1.TypedSerializer.ToObject(target[propKey]), resolver);
+            payload[resolver(propKey)] = recursiveResolver((staticRv && staticRv.ToObject(target[propKey]) || target[propKey]), resolver);
         }
     }
     else if (type_check_1.TypeCheck.IsArray(target)) {
-        payload = (target || []).map(i => recursiveResolver(bonbons_serialize_1.TypedSerializer.ToObject(i), resolver));
+        payload = (target || []).map(i => recursiveResolver((staticRv && staticRv.ToObject(i) || i), resolver));
     }
     else {
         return target;

@@ -35,7 +35,8 @@ class DIContainer {
             if (exist)
                 throw registerError(node.el);
             const entry = new DIEntry(node.scope);
-            entry._fac = () => new node.realel(...node.deps.map(dep => this.get(dep)));
+            const isConstructor = !!node.realel.prototype;
+            entry._fac = () => (isConstructor ? new node.realel(...node.deps.map(dep => this.get(dep))) : node.realel);
             this.maps.set(node.el, entry);
         });
     }

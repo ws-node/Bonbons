@@ -8,12 +8,15 @@ const injectable_1 = require("../metadata/injectable");
 const reflect_1 = require("../di/reflect");
 const config_2 = require("../config");
 const bonbons_serialize_1 = require("../utils/bonbons-serialize");
+const type_check_1 = require("../utils/type-check");
+const middlewares_1 = require("../middlewares");
 class ExpressServer {
     constructor() {
         this.di = new di_1.DIContainer();
         this.configs = new config_2.ConfigContainer();
         this._express = core_1.CreateExpress();
         this._ctrls = [];
+        this._initDefaultInjections();
         this._initDefaultOptions();
     }
     /**
@@ -22,9 +25,10 @@ class ExpressServer {
     static Create() { return new ExpressServer(); }
     /** The reference of express app. You can control this if you really want. */
     get app() { return this._express; }
+    get staticResolver() { return this.configs.get(config_1.STATIC_TYPED_RESOLVER); }
     /**
      * register a controller to application.
-     * @param ctrl
+     * @param ctrl the constructor of your controller class
      */
     controller(ctrl) {
         if (!ctrl)
@@ -47,8 +51,8 @@ class ExpressServer {
     }
     useOptions(...args) {
         const [k, v] = args.length <= 1 ? [args.key, args.value] : [...args];
-        const oldValue = this.configs.get(k) || {};
-        this.configs.set(config_1.createOptions(k, Object.assign(oldValue, v || {})));
+        const isFromClass = type_check_1.TypeCheck.isFromCustomClass(v); // check if the v is the instance of a custom class
+        this.configs.set(config_1.createOptions(k, isFromClass ? v : Object.assign(this.configs.get(k) || {}, v || {})));
         return this;
     }
     listen(port) {
@@ -57,16 +61,26 @@ class ExpressServer {
     }
     run(work) {
         this.di.complete();
+        this._initDefaultMiddlewares();
         this._registerControllers();
         this._express.listen(this._listen, work);
     }
     //#region Private scope
+    _initDefaultInjections() {
+        this.singleton(config_2.ConfigContainer, this.configs);
+    }
     _initDefaultOptions() {
+        this.useOptions(config_1.X_POWERED_BY, "Bonbons:1.0.0-beta");
+        this.useOptions(config_1.STRING_RESULT_OPTIONS, defaultStringResultOptions());
         this.useOptions(config_1.JSON_RESULT_OPTIONS, defaultJsonResultOptions());
-        this.useOptions(config_1.BODY_JSON_PARSE, defaultJsonOptions());
-        this.useOptions(config_1.BODY_TEXT_PARSE, defaultTextOptions());
-        this.useOptions(config_1.BODY_RAW_PARSE, defaultRawOptions());
-        this.useOptions(config_1.BODY_URLENCODED_PARSE, defaultURLEncodedOptions());
+        this.useOptions(config_1.BODY_JSON_PARSER, defaultJsonOptions());
+        this.useOptions(config_1.BODY_TEXT_PARSER, defaultTextOptions());
+        this.useOptions(config_1.BODY_RAW_PARSER, defaultRawOptions());
+        this.useOptions(config_1.BODY_URLENCODED_PARSER, defaultURLEncodedOptions());
+        this.useOptions(config_1.STATIC_TYPED_RESOLVER, bonbons_serialize_1.TypedSerializer);
+    }
+    _initDefaultMiddlewares() {
+        this._express.use(middlewares_1.NewXPoweredBy(this.configs.get(config_1.X_POWERED_BY)));
     }
     _registerControllers() {
         this._ctrls.forEach(ctrl => {
@@ -111,7 +125,7 @@ class ExpressServer {
         if (route.form && route.form.index >= 0) {
             // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
-            querys[route.form.index] = !!(staticType && staticType.type) ? bonbons_serialize_1.TypedSerializer.FromObject(req.body, staticType.type) : req.body;
+            querys[route.form.index] = !!(staticType && staticType.type) ? this.staticResolver.FromObject(req.body, staticType.type) : req.body;
         }
         return { context, params: querys };
     }
@@ -141,16 +155,16 @@ class ExpressServer {
                     middlewares.unshift(core_1.MultiplePartParser().any());
                     break;
                 case "json":
-                    middlewares.unshift(core_1.JSONParser(this.configs.get(config_1.BODY_JSON_PARSE)));
+                    middlewares.unshift(core_1.JSONParser(this.configs.get(config_1.BODY_JSON_PARSER)));
                     break;
                 case "url":
-                    middlewares.unshift(core_1.URLEncodedParser(this.configs.get(config_1.BODY_URLENCODED_PARSE)));
+                    middlewares.unshift(core_1.URLEncodedParser(this.configs.get(config_1.BODY_URLENCODED_PARSER)));
                     break;
                 case "raw":
-                    middlewares.unshift(core_1.RawParser(this.configs.get(config_1.BODY_RAW_PARSE)));
+                    middlewares.unshift(core_1.RawParser(this.configs.get(config_1.BODY_RAW_PARSER)));
                     break;
                 case "text":
-                    middlewares.unshift(core_1.TextParser(this.configs.get(config_1.BODY_TEXT_PARSE)));
+                    middlewares.unshift(core_1.TextParser(this.configs.get(config_1.BODY_TEXT_PARSER)));
                     break;
                 default: break;
             }
@@ -158,6 +172,9 @@ class ExpressServer {
     }
 }
 exports.ExpressServer = ExpressServer;
+function defaultStringResultOptions() {
+    return { fromEncoding: "utf8", toEncoding: "utf8" };
+}
 function defaultJsonResultOptions() {
     return { indentation: true, staticType: false };
 }

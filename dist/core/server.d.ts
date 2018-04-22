@@ -1,7 +1,6 @@
 import { Express } from "../metadata/core";
 import { ConfigKey, IOptions } from "../metadata/config";
 import { BaseController } from "../controller";
-import { InjectScope } from "../metadata/injectable";
 export declare class ExpressServer {
     /**
      * Create a new app.
@@ -14,25 +13,57 @@ export declare class ExpressServer {
     readonly app: Express;
     private _listen;
     private _ctrls;
+    private readonly staticResolver;
     constructor();
     /**
      * register a controller to application.
-     * @param ctrl
+     * @param ctrl the constructor of your controller class
      */
     controller<T extends typeof BaseController>(ctrl: any): this;
-    injectable(provide?: any, type?: InjectScope): ExpressServer;
-    injectable(provide?: any, classType?: any, type?: InjectScope): ExpressServer;
-    scoped(provide?: any): ExpressServer;
-    scoped(provide?: any, classType?: any): ExpressServer;
-    singleton(provide?: any): ExpressServer;
-    singleton(provide?: any, classType?: any): ExpressServer;
-    /** Change or set options when you want. With IOptions<K,V>. */
-    useOptions<K extends ConfigKey, V>(options: IOptions<K, V>): ExpressServer;
-    /** Change or set options when you want. With key and value. */
-    useOptions<K extends ConfigKey, V>(key: K, value: V): ExpressServer;
+    private injectable(provide, type);
+    private injectable(provide, classType, type?);
+    /**
+     * Register a scoped service, and scoped services remain unique in each request scope.
+     * @param provide the ClassType you want to inject
+     */
+    scoped(provide: any): ExpressServer;
+    /**
+     * Register a scoped service, and scoped services remain unique in each request scope.
+     * @param provide the abstract class you want to get the injectiton
+     * @param classType the ClassType you want to inject
+     */
+    scoped(provide: any, classType: any): ExpressServer;
+    /**
+     * Register a singleton service that is unique throughout the application lifecycle.
+     * It should be noted that regardless of whether a singleton service's dependencies are singletons or scopes, they will remain unique.
+     * @param provide the ClassType you want to inject
+     */
+    singleton(provide: any): ExpressServer;
+    /**
+     * Register a singleton service that is unique throughout the application lifecycle.
+     * It should be noted that regardless of whether a singleton service's dependencies are singletons or scopes, they will remain unique.
+     * @param provide the abstract class you want to get the injectiton
+     * @param classType the ClassType you want to inject
+     */
+    singleton(provide: any, classType: any): ExpressServer;
+    /**
+     * Add a configuration item for application or modification.
+     * It is worth noting that members instantiated from a custom type will replace the old configuration members rather than being merged.
+     * @param options IOption<V>
+     */
+    useOptions<V>(options: IOptions<V>): ExpressServer;
+    /**
+     * Add a configuration item for application or modification.
+     * It is worth noting that members instantiated from a custom type will replace the old configuration members rather than being merged.
+     * @param key
+     * @param value
+     */
+    useOptions<V>(key: ConfigKey<V>, value: V): ExpressServer;
     listen(port: number): this;
     run(work: () => void): void;
+    private _initDefaultInjections();
     private _initDefaultOptions();
+    private _initDefaultMiddlewares();
     private _registerControllers();
     private _createInstance<T>(constor);
     private _registerRoutes<T>(route, constructor, methodName);

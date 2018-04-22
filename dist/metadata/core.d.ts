@@ -11,3 +11,7 @@ declare const multerFn: () => any;
  */
 export declare function CreateExpress(): core.Express;
 export { exp as Express, request as Request, response as Response, bodyParser as BodyParser, json as JSONParser, raw as RawParser, text as TextParser, urlencoded as URLEncodedParser, multerFn as MultiplePartParser };
+/** Represents a class's constructor */
+export interface IConstructor<T> {
+    new (...args: any[]): T;
+}
