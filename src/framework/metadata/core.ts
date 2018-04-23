@@ -2,11 +2,18 @@ import * as express from "express";
 import * as core from "express-serve-static-core";
 import * as bodyParser from "body-parser";
 import * as multer from "multer";
+import { IContext } from ".";
 
 type exp = core.Express;
 type application = core.Application;
 type request = core.Request;
-type response = core.Response;
+
+interface Response extends core.Response {
+    locals: {
+        __context: IContext<any, any>;
+        [propName: string]: any;
+    };
+}
 
 const { json, raw, text, urlencoded } = bodyParser;
 
@@ -21,9 +28,9 @@ export function CreateExpress() {
 }
 
 export {
+    Response,
     exp as Express,
     request as Request,
-    response as Response,
     bodyParser as BodyParser,
     json as JSONParser,
     raw as RawParser,

@@ -14,7 +14,7 @@ import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions, FormDcsType, IMiddlewarePipe } from "../metadata";
+import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions, FormDcsType, IMiddlewarePipe, IPipe } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
@@ -176,8 +176,8 @@ export class ExpressServer {
             });
     }
 
-    private _resolvePipes(route: IRoute, middlewares: IMidleware[], pipes: any[]) {
-        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware()));
+    private _resolvePipes(route: IRoute, middlewares: IMidleware[], pipes: IPipe[]) {
+        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware(this.configs)));
     }
 
     private _selectFuncMethod<T extends typeof BaseController>(method: string) {
@@ -253,7 +253,9 @@ function resolveParserOptions<T>(key: ConfigKey<T>, configs: IConfigContainer, o
 function resolveResult(rep: Response, result: IResult, configs: IConfigContainer, isSync?: boolean) {
     const isAsync = isSync === undefined ? TypeCheck.isFromCustomClass(result, Promise) : !isSync;
     if (isAsync) {
-        (<Promise<IMethodResult>>result).then(r => resolveResult(rep, r, configs, true));
+        (<Promise<IMethodResult>>result)
+            .then(r => resolveResult(rep, r, configs, true))
+            .catch((error: Error) => rep.send(showErrorHTML(error)));
     } else {
         if (!result) { rep.send(null); return; }
         if (typeof result === "string") { rep.send(result); return; }
@@ -267,6 +269,21 @@ function defaultStringResultOptions(): StringResultOptions {
 
 function defaultJsonResultOptions(): JsonResultOptions {
     return { indentation: true, staticType: false };
+}
+
+function showErrorHTML(error: Error) {
+    return !error ? "unhandled error." : `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <title>Error</title>
+    </head>
+    <body>
+    <pre>${error.stack || ""}</pre>
+    </body>
+    </html>
+    `;
 }
 
 function defaultURLEncodedOptions(): BodyParser.OptionsUrlencoded {

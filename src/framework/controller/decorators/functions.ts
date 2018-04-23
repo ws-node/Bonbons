@@ -1,5 +1,5 @@
 import { BaseController } from "../controller";
-import { IMidleware, AllowMethod, IMiddlewarePipe } from "../../metadata/controller";
+import { IMidleware, AllowMethod, IMiddlewarePipe, IPipe } from "../../metadata/controller";
 import { Reflection } from "../../di/reflect";
 import { reroute } from "./base";
 import { PARAMS_META_KEY } from "../../metadata/reflect";
@@ -68,15 +68,20 @@ export function Middleware(middlewares: Array<IMidleware>, merge = true) {
     };
 }
 
-export function Pipes<T extends typeof MiddlewarePipe>(middlewares: Array<typeof MiddlewarePipe>, merge = true) {
+/**
+ * Define middleware-pipes for controller or a route. pipe is a ES6 class-stype middleware with more powerful support.
+ * @param middlewares pipes list
+ * @param merge merge pipes list with controller pipes or not, default is true.
+ */
+export function Pipes(pipes: Array<IPipe>, merge = true) {
     return function <T extends BaseController | (typeof BaseController)>(target: any, propertyKey?: string) {
         const isConstructor = !!(<any>target).prototype;
         const prototype: BaseController = isConstructor ? (<any>target).prototype : <any>target;
         const reflect = Reflection.GetControllerMetadata(prototype);
         if (isConstructor) {
-            reflect.pipes = <any[]>middlewares;
+            reflect.pipes = <any[]>pipes;
         } else {
-            reroute(reflect, <string>propertyKey, { pipes: { list: middlewares, merge } });
+            reroute(reflect, <string>propertyKey, { pipes: { list: pipes, merge } });
         }
         Reflection.SetControllerMetadata(prototype, reflect);
     };

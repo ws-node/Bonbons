@@ -9,7 +9,7 @@ import {
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";
-import { TestPipe } from "../pipes/new.pipe";
+import { RandomBreak } from "../pipes/new.pipe";
 
 @Controller("api")
 @Middleware([middleware01])
@@ -21,10 +21,17 @@ export class MainController extends BaseController {
 
     @Method("GET")
     @Route("/index")
+    // @Pipes([RandomBreak])
     public async GetIndex(): Async<StringResult> {
         console.log("this is a get method with base : ");
         // async mock
+        if (parseInt((Math.random() * 100).toString(), 10) % 2 === 1) {
+            throw new Error("fuck errors is occured1");
+        }
         await this.sleep(20);
+        if (parseInt((Math.random() * 100).toString(), 10) % 2 === 1) {
+            throw new Error("fuck errors is occured2");
+        }
         console.log("step 01");
         await this.sleep(20);
         console.log("step 02");
@@ -34,6 +41,7 @@ export class MainController extends BaseController {
         console.log("step 04");
         await this.sleep(20);
         console.log("step 05");
+        console.log(this.context.locals.get("woshinidie"));
         return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { encoding: "GBK" });
     }
 
@@ -56,7 +64,6 @@ export class MainController extends BaseController {
     @Method("POST")
     @Route("post/:id/details/:name", ["query", "find"])
     @Middleware([], false)
-    @Pipes([TestPipe])
     public POSTIndex(
         id: number,
         name: string,

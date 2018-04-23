@@ -1,8 +1,8 @@
-import { IContext } from "../../metadata/controller";
+import { IContext, IContextErrors } from "../../metadata/controller";
 import { HttpRequest } from "./request";
 import { HttpResponse } from "./response";
 import { Request, Response, IConstructor } from "../../metadata/core";
-import { BaseCtor, IReadable } from "./contract";
+import { BaseCtor, IReadable, IWritable } from "./contract";
 
 export * from "./contract";
 export * from "./request";
@@ -22,11 +22,24 @@ export class ControllerContext implements IControllerContext {
     private _response: HttpResponse;
     public get response() { return this._response; }
 
+    private _errors: IContextErrors;
+    public get errors() { return this._errors; }
+
+    public get locals(): IWritable { return this._response.locals; }
+
     public get form(): IReadable { return this._request.form; }
 
-    constructor(request: Request, response: Response) {
+    constructor(request: Request, response: Response, errors?: any) {
         this._request = new HttpRequest(request);
         this._response = new HttpResponse(response);
+        this._errors = {
+            stack: !errors ? [] : [errors],
+            add: (error: any) => this._errors.stack.push(error)
+        };
+    }
+
+    public throws(error: any) {
+        this.errors.stack.push(error);
     }
 
     /**

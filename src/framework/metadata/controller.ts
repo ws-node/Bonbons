@@ -1,4 +1,4 @@
-import { Request, Response, BodyParser } from "./core";
+import { Request, Response, BodyParser, IConstructor } from "./core";
 import { IConfigContainer } from "./config";
 
 export type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
@@ -18,13 +18,21 @@ export type IMidleware = ICommonMidleware | IErrorMiddleware;
 export type IMiddleware = IMidleware;
 
 export interface IMiddlewarePipe<TContext> {
-    transform(context: TContext): void;
-    toMiddleware(): IMiddleware;
+    transform(configs: IConfigContainer, context: TContext): void | Async<void>;
+    toMiddleware(configs: IConfigContainer): IMiddleware;
+}
+
+export type IPipe = IConstructor<IMiddlewarePipe<any>>;
+
+export interface IContextErrors {
+    stack: any[];
+    add(error: any): void;
 }
 
 export interface IContext<REQ, REP> {
     request: REQ;
     response: REP;
+    errors: IContextErrors;
 }
 
 export interface IController<REQ, REP> {
@@ -40,7 +48,7 @@ export interface IRoute {
         merge: boolean;
     };
     pipes: {
-        list: IMiddlewarePipe<any>[];
+        list: IPipe[];
         merge: boolean;
     };
     funcParams: Array<{ key: string, type: any, isQuery: boolean }>;
@@ -75,7 +83,7 @@ export interface IControllerMetadata {
         prefix?: string;
     };
     middlewares: IMidleware[];
-    pipes: IMiddlewarePipe<any>[];
+    pipes: IPipe[];
 }
 
 /**
