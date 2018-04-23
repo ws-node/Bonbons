@@ -6,5 +6,7 @@ export declare class HttpResponse {
     readonly source: Response;
     private _headers;
     readonly headers: IWritable;
+    private _locals;
+    readonly locals: IWritable;
     constructor(_response: Response);
 }

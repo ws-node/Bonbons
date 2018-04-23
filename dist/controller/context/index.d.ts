@@ -1,8 +1,8 @@
-import { IContext } from "../../metadata/controller";
+import { IContext, IContextErrors } from "../../metadata/controller";
 import { HttpRequest } from "./request";
 import { HttpResponse } from "./response";
 import { Request, Response, IConstructor } from "../../metadata/core";
-import { BaseCtor, IReadable } from "./contract";
+import { BaseCtor, IReadable, IWritable } from "./contract";
 export * from "./contract";
 export * from "./request";
 export * from "./response";
@@ -16,8 +16,12 @@ export declare class ControllerContext implements IControllerContext {
     readonly request: HttpRequest;
     private _response;
     readonly response: HttpResponse;
+    private _errors;
+    readonly errors: IContextErrors;
+    readonly locals: IWritable;
     readonly form: IReadable;
-    constructor(request: Request, response: Response);
+    constructor(request: Request, response: Response, errors?: any);
+    throws(error: any): void;
     /**
      * Try read a query param from request with key.
      * @param key the query param key

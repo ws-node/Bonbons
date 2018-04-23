@@ -14,10 +14,19 @@ __export(require("./source"));
 class ControllerContext {
     get request() { return this._request; }
     get response() { return this._response; }
+    get errors() { return this._errors; }
+    get locals() { return this._response.locals; }
     get form() { return this._request.form; }
-    constructor(request, response) {
+    constructor(request, response, errors) {
         this._request = new request_1.HttpRequest(request);
         this._response = new response_1.HttpResponse(response);
+        this._errors = {
+            stack: !errors ? [] : [errors],
+            add: (error) => this._errors.stack.push(error)
+        };
+    }
+    throws(error) {
+        this.errors.stack.push(error);
     }
     /**
      * Try read a query param from request with key.

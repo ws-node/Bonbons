@@ -1,13 +1,16 @@
-import { IControllerContext, ControllerContext } from "./../controller/context";
-import { IMiddlewarePipe, IMiddleware } from "../metadata/controller";
+import { ControllerContext } from "./../controller/context";
+import { IMiddlewarePipe, IMiddleware, Async } from "../metadata/controller";
+import { IConfigContainer } from "..";
 export declare abstract class MiddlewarePipe implements IMiddlewarePipe<ControllerContext> {
-    protected canNext: boolean;
-    protected hasError: boolean;
+    protected isError: boolean;
+    protected context: ControllerContext;
     constructor();
-    abstract transform(context: ControllerContext): void;
-    toMiddleware(): IMiddleware;
+    abstract transform(configs: IConfigContainer, context: ControllerContext): void | Async<void>;
+    protected throws(error: string): void;
+    protected sleep(time: number): Promise<void>;
+    toMiddleware(configs: IConfigContainer): IMiddleware;
 }
 export declare abstract class ErrorMiddlewarePipe extends MiddlewarePipe {
     constructor();
-    abstract transform(context: IControllerContext): void;
+    abstract transform(configs: IConfigContainer, context: ControllerContext): void | Async<void>;
 }

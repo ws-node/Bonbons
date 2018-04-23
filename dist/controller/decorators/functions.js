@@ -67,16 +67,21 @@ function Middleware(middlewares, merge = true) {
     };
 }
 exports.Middleware = Middleware;
-function Pipes(middlewares, merge = true) {
+/**
+ * Define middleware-pipes for controller or a route. pipe is a ES6 class-stype middleware with more powerful support.
+ * @param middlewares pipes list
+ * @param merge merge pipes list with controller pipes or not, default is true.
+ */
+function Pipes(pipes, merge = true) {
     return function (target, propertyKey) {
         const isConstructor = !!target.prototype;
         const prototype = isConstructor ? target.prototype : target;
         const reflect = reflect_1.Reflection.GetControllerMetadata(prototype);
         if (isConstructor) {
-            reflect.pipes = middlewares;
+            reflect.pipes = pipes;
         }
         else {
-            base_1.reroute(reflect, propertyKey, { pipes: { list: middlewares, merge } });
+            base_1.reroute(reflect, propertyKey, { pipes: { list: pipes, merge } });
         }
         reflect_1.Reflection.SetControllerMetadata(prototype, reflect);
     };

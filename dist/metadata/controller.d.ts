@@ -1,4 +1,4 @@
-import { Request, Response } from "./core";
+import { Request, Response, IConstructor } from "./core";
 import { IConfigContainer } from "./config";
 export declare type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
 export declare enum FormDcsType {
@@ -14,12 +14,18 @@ export declare type IErrorMiddleware = (error: any, request: Request, response: 
 export declare type IMidleware = ICommonMidleware | IErrorMiddleware;
 export declare type IMiddleware = IMidleware;
 export interface IMiddlewarePipe<TContext> {
-    transform(context: TContext): void;
-    toMiddleware(): IMiddleware;
+    transform(configs: IConfigContainer, context: TContext): void | Async<void>;
+    toMiddleware(configs: IConfigContainer): IMiddleware;
+}
+export declare type IPipe = IConstructor<IMiddlewarePipe<any>>;
+export interface IContextErrors {
+    stack: any[];
+    add(error: any): void;
 }
 export interface IContext<REQ, REP> {
     request: REQ;
     response: REP;
+    errors: IContextErrors;
 }
 export interface IController<REQ, REP> {
     context: IContext<REQ, REP>;
@@ -33,7 +39,7 @@ export interface IRoute {
         merge: boolean;
     };
     pipes: {
-        list: IMiddlewarePipe<any>[];
+        list: IPipe[];
         merge: boolean;
     };
     funcParams: Array<{
@@ -70,7 +76,7 @@ export interface IControllerMetadata {
         prefix?: string;
     };
     middlewares: IMidleware[];
-    pipes: IMiddlewarePipe<any>[];
+    pipes: IPipe[];
 }
 /**
  * Represents an asynchronous process and is used as an alias for a Promise

@@ -107,7 +107,7 @@ class ExpressServer {
         });
     }
     _resolvePipes(route, middlewares, pipes) {
-        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware()));
+        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware(this.configs)));
     }
     _selectFuncMethod(method) {
         let invoke;
@@ -177,7 +177,9 @@ function resolveParserOptions(key, configs, options) {
 function resolveResult(rep, result, configs, isSync) {
     const isAsync = isSync === undefined ? type_check_1.TypeCheck.isFromCustomClass(result, Promise) : !isSync;
     if (isAsync) {
-        result.then(r => resolveResult(rep, r, configs, true));
+        result
+            .then(r => resolveResult(rep, r, configs, true))
+            .catch((error) => rep.send(showErrorHTML(error)));
     }
     else {
         if (!result) {
@@ -196,6 +198,20 @@ function defaultStringResultOptions() {
 }
 function defaultJsonResultOptions() {
     return { indentation: true, staticType: false };
+}
+function showErrorHTML(error) {
+    return !error ? "unhandled error." : `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <title>Error</title>
+    </head>
+    <body>
+    <pre>${error.stack || ""}</pre>
+    </body>
+    </html>
+    `;
 }
 function defaultURLEncodedOptions() {
     return {
