@@ -195,7 +195,10 @@ export class ExpressServer {
         if (route.form && route.form.index >= 0) {
             // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
-            querys[route.form.index] = !!(staticType && staticType.type) ? this.staticResolver.FromObject(req.body, staticType.type) : req.body;
+            const resolver = this.staticResolver;
+            querys[route.form.index] = !!(resolver && staticType && staticType.type) ?
+                resolver.FromObject(req.body, staticType.type) :
+                req.body;
         }
         return { context, params: querys };
     }
