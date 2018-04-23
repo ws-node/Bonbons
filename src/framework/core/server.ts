@@ -14,7 +14,7 @@ import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions } from "../metadata";
+import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions, FormDcsType } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
@@ -196,8 +196,6 @@ export class ExpressServer {
             // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
             const resolver = this.staticResolver;
-            console.log(this.configs);
-            console.log(resolver);
             querys[route.form.index] = !!(resolver && staticType && staticType.type) ?
                 resolver.FromObject(req.body, staticType.type) :
                 req.body;
@@ -214,27 +212,41 @@ export class ExpressServer {
     }
 
     private _selectFormParser(route: IRoute, middlewares: IMidleware[]) {
-        if (route.form && route.form.parser) {
-            switch (route.form.parser) {
-                case "multiple": middlewares.unshift(MultiplePartParser().any()); break;
-                case "json": middlewares.unshift(JSONParser(this.configs.get(BODY_JSON_PARSER))); break;
-                case "url": middlewares.unshift(URLEncodedParser(this.configs.get(BODY_URLENCODED_PARSER))); break;
-                case "raw": middlewares.unshift(RawParser(this.configs.get(BODY_RAW_PARSER))); break;
-                case "text": middlewares.unshift(TextParser(this.configs.get(BODY_TEXT_PARSER))); break;
-                default: break;
-            }
-        }
+        if (route.form && route.form.parser) resolveFormParser(middlewares, route, this.configs);
     }
 
     //#endregion
 
 }
 
+function resolveFormParser(middlewares: IMidleware[], route: IRoute, configs: IConfigContainer) {
+    const parser = resolveParser(route.form.parser, configs, route.form.options);
+    if (parser) middlewares.unshift(parser);
+}
+
+function resolveParser(type: FormDcsType, configs: IConfigContainer, options?: any) {
+    switch (type) {
+        case FormDcsType.MultipleFormData:
+            return MultiplePartParser().any();
+        case FormDcsType.ApplicationJson:
+            return JSONParser(resolveParserOptions(BODY_JSON_PARSER, configs, options));
+        case FormDcsType.UrlEncoded:
+            return URLEncodedParser(resolveParserOptions(BODY_URLENCODED_PARSER, configs, options));
+        case FormDcsType.Raw:
+            return RawParser(resolveParserOptions(BODY_RAW_PARSER, configs, options));
+        case FormDcsType.TextPlain:
+            return TextParser(resolveParserOptions(BODY_TEXT_PARSER, configs, options));
+        default: return null;
+    }
+}
+
+function resolveParserOptions<T>(key: ConfigKey<T>, configs: IConfigContainer, options?: any): T {
+    return Object.assign(configs.get(BODY_JSON_PARSER) || {}, options || {});
+}
+
 function resolveResult(rep: Response, result: IResult, configs: IConfigContainer, isSync?: boolean) {
-    console.log(TypeCheck.isFromCustomClass(result, Promise));
     const isAsync = isSync === undefined ? TypeCheck.isFromCustomClass(result, Promise) : !isSync;
     if (isAsync) {
-        console.log((<Promise<IMethodResult>>result));
         (<Promise<IMethodResult>>result).then(r => resolveResult(rep, r, configs, true));
     } else {
         if (!result) { rep.send(null); return; }

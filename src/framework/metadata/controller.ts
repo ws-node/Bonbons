@@ -1,7 +1,16 @@
-import { Request, Response } from "./core";
+import { Request, Response, BodyParser } from "./core";
 import { IConfigContainer } from "./config";
 
 export type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
+
+export enum FormDcsType {
+    MultipleFormData = "multiple",
+    MultipleFile = "files",
+    ApplicationJson = "json",
+    UrlEncoded = "url",
+    TextPlain = "text",
+    Raw = "raw"
+}
 
 export type ICommonMidleware = (request: Request, response: Response, next?: () => void) => void;
 export type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
@@ -26,8 +35,9 @@ export interface IRoute {
     };
     funcParams: Array<{ key: string, type: any, isQuery: boolean }>;
     form: {
-        parser: "multiple" | "json" | "url" | "raw" | "text";
+        parser: FormDcsType;
         index: number;
+        options?: any;
         type?: string;
     };
 }
