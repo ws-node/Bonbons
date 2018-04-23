@@ -24,7 +24,8 @@ export abstract class ErrorMiddlewarePipe extends MiddlewarePipe {
 
     constructor() {
         super();
-        this.hasError = false;
+        this.hasError = true;
+        this.canNext = false;
     }
 
     abstract transform(context: IControllerContext): void;
