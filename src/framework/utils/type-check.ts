@@ -12,8 +12,10 @@ function getPrototypeConstructor(obj) {
     return proto && proto.constructor;
 }
 
-function isCustomClassInstance(obj) {
-    return getPrototypeConstructor(obj) !== Object;
+function isCustomClassInstance(obj: any, type?: any) {
+    return !type ?
+        (getPrototypeConstructor(obj) !== Object) :
+        (getPrototypeConstructor(obj) === type);
 }
 
 export class TypeCheckCreator {
@@ -24,7 +26,7 @@ export class TypeCheckCreator {
 
     public getClass(target: any) { return getPrototypeConstructor(target); }
 
-    public isFromCustomClass(target: any) { return isCustomClassInstance(target); }
+    public isFromCustomClass(target: any, type?: any) { return isCustomClassInstance(target, type); }
 
 }
 

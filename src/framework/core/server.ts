@@ -8,7 +8,7 @@ import {
 import {
     createOptions, ConfigKey, IOptions,
     JSON_RESULT_OPTIONS, BODY_JSON_PARSER, BODY_RAW_PARSER,
-    BODY_TEXT_PARSER, BODY_URLENCODED_PARSER, STATIC_TYPED_RESOLVER, STRING_RESULT_OPTIONS, X_POWERED_BY
+    BODY_TEXT_PARSER, BODY_URLENCODED_PARSER, STATIC_TYPED_RESOLVER, STRING_RESULT_OPTIONS, X_POWERED_BY, IConfigContainer
 } from "../metadata/config";
 import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
@@ -196,6 +196,8 @@ export class ExpressServer {
             // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
             const resolver = this.staticResolver;
+            console.log(this.configs);
+            console.log(resolver);
             querys[route.form.index] = !!(resolver && staticType && staticType.type) ?
                 resolver.FromObject(req.body, staticType.type) :
                 req.body;
@@ -207,17 +209,7 @@ export class ExpressServer {
         middlewares.push((req: Request, rep: Response) => {
             const { context, params } = this._parseFuncParams<T>(constructor, req, rep, route);
             const result: IResult = constructor.prototype[methodName].bind(context)(...params);
-            if (typeof result === "string") {
-                rep.send(result);
-            } else {
-                // rep.send(result && result.toString(this.configs));
-                const type = Object.getPrototypeOf(result).constructor;
-                if (type === Promise) {
-                    (<Promise<IMethodResult>>result).then(r => rep.send(r.toString(this.configs)));
-                } else {
-                    rep.send((<IMethodResult>result).toString(this.configs));
-                }
-            }
+            resolveResult(rep, result, this.configs);
         });
     }
 
@@ -236,6 +228,19 @@ export class ExpressServer {
 
     //#endregion
 
+}
+
+function resolveResult(rep: Response, result: IResult, configs: IConfigContainer, isSync?: boolean) {
+    console.log(TypeCheck.isFromCustomClass(result, Promise));
+    const isAsync = isSync === undefined ? TypeCheck.isFromCustomClass(result, Promise) : !isSync;
+    if (isAsync) {
+        console.log((<Promise<IMethodResult>>result));
+        (<Promise<IMethodResult>>result).then(r => resolveResult(rep, r, configs, true));
+    } else {
+        if (!result) { rep.send(null); return; }
+        if (typeof result === "string") { rep.send(result); return; }
+        rep.send((<IMethodResult>result).toString(configs));
+    }
 }
 
 function defaultStringResultOptions(): StringResultOptions {
