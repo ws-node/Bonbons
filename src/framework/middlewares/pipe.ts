@@ -32,10 +32,6 @@ export abstract class ErrorMiddlewarePipe extends MiddlewarePipe {
 
 }
 
-function createInstance<T extends { new(...args): T }>(constor: any, depts: any[]): T {
-    return new (<any>constor)(...(depts || []));
-}
-
 function errorNext(step: (context: IControllerContext) => void) {
     return (error, req, rep, next) => {
         step(getContext(req, rep));
@@ -44,7 +40,7 @@ function errorNext(step: (context: IControllerContext) => void) {
 }
 
 function errorStop(step: (context: IControllerContext) => void) {
-    return (error, req, rep) => {
+    return (error, req, rep, next) => {
         step(getContext(req, rep));
     };
 }
