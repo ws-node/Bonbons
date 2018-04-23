@@ -12,7 +12,7 @@ export class ReflectionConstructor {
     }
 
     public GetControllerMetadata(target: any): IControllerMetadata {
-        return Reflect.getMetadata(CTOR_META_KEY, target) || { router: { prefix: "/", routes: {} }, middlewares: [] };
+        return Reflect.getMetadata(CTOR_META_KEY, target) || { router: { prefix: "/", routes: {} }, middlewares: [], pipes: [] };
     }
 
     public SetControllerMetadata(target: any, meta: IControllerMetadata) {

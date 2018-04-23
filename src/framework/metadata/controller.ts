@@ -15,6 +15,12 @@ export enum FormDcsType {
 export type ICommonMidleware = (request: Request, response: Response, next?: () => void) => void;
 export type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
 export type IMidleware = ICommonMidleware | IErrorMiddleware;
+export type IMiddleware = IMidleware;
+
+export interface IMiddlewarePipe<TContext> {
+    transform(context: TContext): void;
+    toMiddleware(): IMiddleware;
+}
 
 export interface IContext<REQ, REP> {
     request: REQ;
@@ -31,6 +37,10 @@ export interface IRoute {
     allowMethods: AllowMethod[];
     middleware: {
         list: IMidleware[];
+        merge: boolean;
+    };
+    pipes: {
+        list: IMiddlewarePipe<any>[];
         merge: boolean;
     };
     funcParams: Array<{ key: string, type: any, isQuery: boolean }>;
@@ -65,6 +75,7 @@ export interface IControllerMetadata {
         prefix?: string;
     };
     middlewares: IMidleware[];
+    pipes: IMiddlewarePipe<any>[];
 }
 
 /**

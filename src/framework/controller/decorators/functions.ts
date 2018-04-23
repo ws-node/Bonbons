@@ -1,8 +1,9 @@
 import { BaseController } from "../controller";
-import { IMidleware, AllowMethod } from "../../metadata/controller";
+import { IMidleware, AllowMethod, IMiddlewarePipe } from "../../metadata/controller";
 import { Reflection } from "../../di/reflect";
 import { reroute } from "./base";
 import { PARAMS_META_KEY } from "../../metadata/reflect";
+import { MiddlewarePipe } from "../..";
 
 /**
  * Define a route method for the controller. default allowed method is 'GET'.
@@ -62,6 +63,20 @@ export function Middleware(middlewares: Array<IMidleware>, merge = true) {
             reflect.middlewares = middlewares;
         } else {
             reroute(reflect, <string>propertyKey, { middleware: { list: middlewares, merge } });
+        }
+        Reflection.SetControllerMetadata(prototype, reflect);
+    };
+}
+
+export function Pipes<T extends typeof MiddlewarePipe>(middlewares: Array<typeof MiddlewarePipe>, merge = true) {
+    return function <T extends BaseController | (typeof BaseController)>(target: any, propertyKey?: string) {
+        const isConstructor = !!(<any>target).prototype;
+        const prototype: BaseController = isConstructor ? (<any>target).prototype : <any>target;
+        const reflect = Reflection.GetControllerMetadata(prototype);
+        if (isConstructor) {
+            reflect.pipes = <any[]>middlewares;
+        } else {
+            reroute(reflect, <string>propertyKey, { pipes: { list: middlewares, merge } });
         }
         Reflection.SetControllerMetadata(prototype, reflect);
     };

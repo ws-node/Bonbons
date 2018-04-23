@@ -14,7 +14,7 @@ import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions, FormDcsType } from "../metadata";
+import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions, FormDcsType, IMiddlewarePipe } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
@@ -168,10 +168,16 @@ export class ExpressServer {
                 if (!route.path) throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
                 const invoke: (...args: any[]) => void = this._selectFuncMethod<T>(m);
                 const middlewares = (route.middleware && route.middleware.list) || [];
+                const pipes = (route.pipes && route.pipes.list) || [];
                 this._selectFormParser(route, middlewares);
+                this._resolvePipes(route, middlewares, pipes);
                 this._decideFinalStep(route, middlewares, constructor, methodName);
                 invoke(route.path, ...middlewares);
             });
+    }
+
+    private _resolvePipes(route: IRoute, middlewares: IMidleware[], pipes: any[]) {
+        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware()));
     }
 
     private _selectFuncMethod<T extends typeof BaseController>(method: string) {

@@ -4,10 +4,12 @@ import {
     Middleware, FromForm, FromBody,
     FormData, JsonResultResolvers, Async,
     ConfigContainer,
-    StringResult
+    StringResult,
+    Pipes
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";
+import { TestPipe } from "../pipes/new.pipe";
 
 @Controller("api")
 @Middleware([middleware01])
@@ -54,6 +56,7 @@ export class MainController extends BaseController {
     @Method("POST")
     @Route("post/:id/details/:name", ["query", "find"])
     @Middleware([], false)
+    @Pipes([TestPipe])
     public POSTIndex(
         id: number,
         name: string,
@@ -70,7 +73,7 @@ export class MainController extends BaseController {
         console.log(this.context.request.headers.get("content-type"));
 
         console.log(this.context.response.headers.get("x-powered-by"));
-        console.log(this.context.response.headers.set("woshinidie", true));
+        this.context.response.headers.set("woshinidie", true);
 
         return this.toJSON({
             theRequestHeaders: this.context.request.headers.data,
