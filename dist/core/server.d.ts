@@ -67,6 +67,7 @@ export declare class ExpressServer {
     private _registerControllers();
     private _createInstance<T>(constor);
     private _registerRoutes<T>(route, constructor, methodName);
+    private _resolvePipes(route, middlewares, pipes);
     private _selectFuncMethod<T>(method);
     private _parseFuncParams<T>(constructor, req, rep, route);
     private _decideFinalStep<T>(route, middlewares, constructor, methodName);

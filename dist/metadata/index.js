@@ -4,6 +4,7 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(require("./core"));
+__export(require("./controller"));
 __export(require("./injectable"));
 __export(require("./reflect"));
 __export(require("./config"));

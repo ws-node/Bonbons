@@ -67,4 +67,19 @@ function Middleware(middlewares, merge = true) {
     };
 }
 exports.Middleware = Middleware;
+function Pipes(middlewares, merge = true) {
+    return function (target, propertyKey) {
+        const isConstructor = !!target.prototype;
+        const prototype = isConstructor ? target.prototype : target;
+        const reflect = reflect_1.Reflection.GetControllerMetadata(prototype);
+        if (isConstructor) {
+            reflect.pipes = middlewares;
+        }
+        else {
+            base_1.reroute(reflect, propertyKey, { pipes: { list: middlewares, merge } });
+        }
+        reflect_1.Reflection.SetControllerMetadata(prototype, reflect);
+    };
+}
+exports.Pipes = Pipes;
 //# sourceMappingURL=functions.js.map

@@ -6,6 +6,7 @@ const config_1 = require("../metadata/config");
 const controller_1 = require("../controller");
 const injectable_1 = require("../metadata/injectable");
 const reflect_1 = require("../di/reflect");
+const metadata_1 = require("../metadata");
 const config_2 = require("../config");
 const bonbons_serialize_1 = require("../utils/bonbons-serialize");
 const type_check_1 = require("../utils/type-check");
@@ -98,10 +99,15 @@ class ExpressServer {
                 throw new Error(`invalid REST method path : the path of action '${methodName}' is empty.`);
             const invoke = this._selectFuncMethod(m);
             const middlewares = (route.middleware && route.middleware.list) || [];
+            const pipes = (route.pipes && route.pipes.list) || [];
             this._selectFormParser(route, middlewares);
+            this._resolvePipes(route, middlewares, pipes);
             this._decideFinalStep(route, middlewares, constructor, methodName);
             invoke(route.path, ...middlewares);
         });
+    }
+    _resolvePipes(route, middlewares, pipes) {
+        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware()));
     }
     _selectFuncMethod(method) {
         let invoke;
@@ -125,7 +131,10 @@ class ExpressServer {
         if (route.form && route.form.index >= 0) {
             // when use form decorator for params, try to static-typed and inject to function params list.
             const staticType = (route.funcParams || [])[route.form.index];
-            querys[route.form.index] = !!(staticType && staticType.type) ? this.staticResolver.FromObject(req.body, staticType.type) : req.body;
+            const resolver = this.staticResolver;
+            querys[route.form.index] = !!(resolver && staticType && staticType.type) ?
+                resolver.FromObject(req.body, staticType.type) :
+                req.body;
         }
         return { context, params: querys };
     }
@@ -133,47 +142,57 @@ class ExpressServer {
         middlewares.push((req, rep) => {
             const { context, params } = this._parseFuncParams(constructor, req, rep, route);
             const result = constructor.prototype[methodName].bind(context)(...params);
-            if (typeof result === "string") {
-                rep.send(result);
-            }
-            else {
-                // rep.send(result && result.toString(this.configs));
-                const type = Object.getPrototypeOf(result).constructor;
-                if (type === Promise) {
-                    result.then(r => rep.send(r.toString(this.configs)));
-                }
-                else {
-                    rep.send(result.toString(this.configs));
-                }
-            }
+            resolveResult(rep, result, this.configs);
         });
     }
     _selectFormParser(route, middlewares) {
-        if (route.form && route.form.parser) {
-            switch (route.form.parser) {
-                case "multiple":
-                    middlewares.unshift(core_1.MultiplePartParser().any());
-                    break;
-                case "json":
-                    middlewares.unshift(core_1.JSONParser(this.configs.get(config_1.BODY_JSON_PARSER)));
-                    break;
-                case "url":
-                    middlewares.unshift(core_1.URLEncodedParser(this.configs.get(config_1.BODY_URLENCODED_PARSER)));
-                    break;
-                case "raw":
-                    middlewares.unshift(core_1.RawParser(this.configs.get(config_1.BODY_RAW_PARSER)));
-                    break;
-                case "text":
-                    middlewares.unshift(core_1.TextParser(this.configs.get(config_1.BODY_TEXT_PARSER)));
-                    break;
-                default: break;
-            }
-        }
+        if (route.form && route.form.parser)
+            resolveFormParser(middlewares, route, this.configs);
     }
 }
 exports.ExpressServer = ExpressServer;
+function resolveFormParser(middlewares, route, configs) {
+    const parser = resolveParser(route.form.parser, configs, route.form.options);
+    if (parser)
+        middlewares.unshift(parser);
+}
+function resolveParser(type, configs, options) {
+    switch (type) {
+        case metadata_1.FormDcsType.MultipleFormData:
+            return core_1.MultiplePartParser().any();
+        case metadata_1.FormDcsType.ApplicationJson:
+            return core_1.JSONParser(resolveParserOptions(config_1.BODY_JSON_PARSER, configs, options));
+        case metadata_1.FormDcsType.UrlEncoded:
+            return core_1.URLEncodedParser(resolveParserOptions(config_1.BODY_URLENCODED_PARSER, configs, options));
+        case metadata_1.FormDcsType.Raw:
+            return core_1.RawParser(resolveParserOptions(config_1.BODY_RAW_PARSER, configs, options));
+        case metadata_1.FormDcsType.TextPlain:
+            return core_1.TextParser(resolveParserOptions(config_1.BODY_TEXT_PARSER, configs, options));
+        default: return null;
+    }
+}
+function resolveParserOptions(key, configs, options) {
+    return Object.assign(configs.get(config_1.BODY_JSON_PARSER) || {}, options || {});
+}
+function resolveResult(rep, result, configs, isSync) {
+    const isAsync = isSync === undefined ? type_check_1.TypeCheck.isFromCustomClass(result, Promise) : !isSync;
+    if (isAsync) {
+        result.then(r => resolveResult(rep, r, configs, true));
+    }
+    else {
+        if (!result) {
+            rep.send(null);
+            return;
+        }
+        if (typeof result === "string") {
+            rep.send(result);
+            return;
+        }
+        rep.send(result.toString(configs));
+    }
+}
 function defaultStringResultOptions() {
-    return { fromEncoding: "utf8", toEncoding: "utf8" };
+    return { encoding: "utf8", decoding: "utf8" };
 }
 function defaultJsonResultOptions() {
     return { indentation: true, staticType: false };

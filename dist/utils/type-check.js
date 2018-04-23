@@ -10,14 +10,16 @@ function getPrototypeConstructor(obj) {
     const proto = Object.getPrototypeOf(obj);
     return proto && proto.constructor;
 }
-function isCustomClassInstance(obj) {
-    return getPrototypeConstructor(obj) !== Object;
+function isCustomClassInstance(obj, type) {
+    return !type ?
+        (getPrototypeConstructor(obj) !== Object) :
+        (getPrototypeConstructor(obj) === type);
 }
 class TypeCheckCreator {
     IsObject(target) { return isObject(target); }
     IsArray(target) { return isArray(target); }
     getClass(target) { return getPrototypeConstructor(target); }
-    isFromCustomClass(target) { return isCustomClassInstance(target); }
+    isFromCustomClass(target, type) { return isCustomClassInstance(target, type); }
 }
 exports.TypeCheckCreator = TypeCheckCreator;
 exports.TypeCheck = new TypeCheckCreator();

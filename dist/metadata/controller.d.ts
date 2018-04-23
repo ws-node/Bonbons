@@ -1,9 +1,22 @@
 import { Request, Response } from "./core";
 import { IConfigContainer } from "./config";
 export declare type AllowMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS" | "HEAD";
+export declare enum FormDcsType {
+    MultipleFormData = "multiple",
+    MultipleFile = "files",
+    ApplicationJson = "json",
+    UrlEncoded = "url",
+    TextPlain = "text",
+    Raw = "raw",
+}
 export declare type ICommonMidleware = (request: Request, response: Response, next?: () => void) => void;
 export declare type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
 export declare type IMidleware = ICommonMidleware | IErrorMiddleware;
+export declare type IMiddleware = IMidleware;
+export interface IMiddlewarePipe<TContext> {
+    transform(context: TContext): void;
+    toMiddleware(): IMiddleware;
+}
 export interface IContext<REQ, REP> {
     request: REQ;
     response: REP;
@@ -19,14 +32,19 @@ export interface IRoute {
         list: IMidleware[];
         merge: boolean;
     };
+    pipes: {
+        list: IMiddlewarePipe<any>[];
+        merge: boolean;
+    };
     funcParams: Array<{
         key: string;
         type: any;
         isQuery: boolean;
     }>;
     form: {
-        parser: "multiple" | "json" | "url" | "raw" | "text";
+        parser: FormDcsType;
         index: number;
+        options?: any;
         type?: string;
     };
 }
@@ -52,6 +70,7 @@ export interface IControllerMetadata {
         prefix?: string;
     };
     middlewares: IMidleware[];
+    pipes: IMiddlewarePipe<any>[];
 }
 /**
  * Represents an asynchronous process and is used as an alias for a Promise
@@ -76,6 +95,6 @@ export interface JsonResultOptions {
     staticType?: boolean;
 }
 export interface StringResultOptions {
-    fromEncoding?: string;
-    toEncoding?: string;
+    encoding?: string;
+    decoding?: string;
 }

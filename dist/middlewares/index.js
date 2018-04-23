@@ -1,9 +1,13 @@
 "use strict";
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
+__export(require("./pipe"));
 function NewXPoweredBy(value) {
     return function (req, rep, next) {
         rep.setHeader("x-powered-by", value);
-        next();
+        next && next();
     };
 }
 exports.NewXPoweredBy = NewXPoweredBy;

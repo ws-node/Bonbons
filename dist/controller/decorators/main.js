@@ -19,11 +19,17 @@ function registerCompelete(meta) {
         if (!(route.path || "").startsWith("/")) {
             route.path = meta.router.prefix + route.path;
         }
-        else if (route.middleware && route.middleware.merge) {
+        if (route.middleware && route.middleware.merge) {
             route.middleware.list = [...meta.middlewares, ...route.middleware.list];
         }
         else if (!route.middleware) {
             route.middleware = { list: [...meta.middlewares], merge: false };
+        }
+        if (route.pipes && route.pipes.merge) {
+            route.pipes.list = [...meta.pipes, ...route.pipes.list];
+        }
+        else if (!route.pipes) {
+            route.pipes = { list: [...meta.pipes], merge: false };
         }
     });
     return meta;

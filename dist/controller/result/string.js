@@ -9,11 +9,8 @@ class StringResult {
     }
     toString(configs) {
         const options = Object.assign(configs.get(metadata_1.STRING_RESULT_OPTIONS) || {}, this.options || {});
-        const from = (options.fromEncoding || "UTF8").toLowerCase();
-        const to = (options.toEncoding || "UTF8").toLowerCase();
-        console.log(`ENCODING : [ ${from} ] - [ ${to} ]`);
-        console.log(this.value);
-        console.log(iconv.decode(iconv.encode(this.value, from), to));
+        const from = (options.encoding || "UTF8").toLowerCase();
+        const to = (options.decoding || "UTF8").toLowerCase();
         return iconv.decode(iconv.encode(this.value, from), to);
     }
 }
