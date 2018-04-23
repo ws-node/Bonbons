@@ -321,10 +321,10 @@ export class PostModel {
     @Route("/index")
     public async GetIndex(): StringResult {
         console.log("this is a get method with base : ");
-        return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { fromEncoding: "GBK" });
+        return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { encoding: "GBK" });
         // defaults:
-        // fromEncoding: "utf8"
-        // toEncoding: "utf8"
+        // encoding: "utf8"
+        // decoding: "utf8"
     }
 
     // response:

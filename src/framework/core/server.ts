@@ -244,7 +244,7 @@ function resolveResult(rep: Response, result: IResult, configs: IConfigContainer
 }
 
 function defaultStringResultOptions(): StringResultOptions {
-    return { fromEncoding: "utf8", toEncoding: "utf8" };
+    return { encoding: "utf8", decoding: "utf8" };
 }
 
 function defaultJsonResultOptions(): JsonResultOptions {

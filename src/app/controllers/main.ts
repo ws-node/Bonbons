@@ -32,7 +32,7 @@ export class MainController extends BaseController {
         console.log("step 04");
         await this.sleep(20);
         console.log("step 05");
-        return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { fromEncoding: "GBK" });
+        return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { encoding: "GBK" });
     }
 
     @Method("GET", "POST")

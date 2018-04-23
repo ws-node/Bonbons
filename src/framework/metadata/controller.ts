@@ -83,6 +83,6 @@ export interface JsonResultOptions {
 }
 
 export interface StringResultOptions {
-    fromEncoding?: string;
-    toEncoding?: string;
+    encoding?: string;
+    decoding?: string;
 }
