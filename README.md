@@ -124,8 +124,9 @@ export class SuperService {
 // it works!
 ```
 
-#### 4. Add middlewares for route or controller
+#### 4. Add middlewares or pipe for route or controller
 ```JavaScript
+// 1 : Middlewares like express style
 // first create middleware in pure function format.
 function middleware01(r, rs, next) {
     console.log("123456");
@@ -171,6 +172,53 @@ export class MainController extends BaseController {
     }
 
 }
+
+// 2. Bonbons pipes
+export class RandomBreak extends MiddlewarePipe {
+
+    constructor() { super(); }
+
+    async process(): Promise<void> {
+        this.context.locals.set("woshinidie", 1024);
+        await this.sleep(100);
+        const k = parseInt((Math.random() * 100).toString(), 10) % 2 === 1;
+        console.log(k);
+        if (k) {
+            this.throws("哈哈哈哈哈哈哈哈，崩溃了吧");
+        }
+    }
+
+}
+
+// then add to route method
+ @Method("GET")
+    @Route("/index")
+    @Pipes([RandomBreak])
+    public async GetIndex(): StringResult {
+        console.log("this is a get method with base : ");
+        return this.toStringfy("woshinidie : 鎴戞槸浣犵埞", { encoding: "GBK" });
+    }
+// this method will goes wrong in 50% situation
+
+// or you can create pipe factory to modify the pipe behavior by constructor params
+export class TokenCheck extends MiddlewarePipe {
+
+    constructor(private token: string) { super(); }
+
+    process(): void | Promise<void> {
+        const tk: string = this.context.request.headers.get("jwt-token");
+        if (!tk || tk !== (this.token || "default_token")) {
+            // this.throws("401 unauthorize");
+            this.redirect(301, "/api/error401");
+        }
+    }
+
+}
+
+export const Authorize: IPipeFactory = createPipeBundle(TokenCheck);
+
+// then call this factory with params
+@Pipes([Authorize("user_role")]) // =>  this.token = "user_role"
 ```
 
 #### 5. Form control
