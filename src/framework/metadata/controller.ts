@@ -24,6 +24,17 @@ export interface IMiddlewarePipe<TContext> {
 
 export type IPipe = IConstructor<IMiddlewarePipe<any>>;
 
+export type IPipeElement = IPipe | IPipeBundle;
+
+export interface IPipeBundle {
+    target: IPipe;
+    params: any[];
+}
+
+export interface IPipeFactory {
+    (...args: any[]): IPipeBundle;
+}
+
 export interface IContextErrors {
     stack: any[];
     add(error: any): void;
@@ -48,7 +59,7 @@ export interface IRoute {
         merge: boolean;
     };
     pipes: {
-        list: IPipe[];
+        list: IPipeElement[];
         merge: boolean;
     };
     funcParams: Array<{ key: string, type: any, isQuery: boolean }>;
@@ -83,7 +94,7 @@ export interface IControllerMetadata {
         prefix?: string;
     };
     middlewares: IMidleware[];
-    pipes: IPipe[];
+    pipes: IPipeElement[];
 }
 
 /**

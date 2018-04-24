@@ -1,5 +1,5 @@
 import { HttpRequest, HttpResponse, IControllerContext, ControllerContext } from "./../controller/context";
-import { IMiddlewarePipe, IMiddleware, Async } from "../metadata/controller";
+import { IMiddlewarePipe, IMiddleware, Async, IPipe, IPipeFactory } from "../metadata/controller";
 import { TypeCheck } from "../utils/type-check";
 import { IConfigContainer, Response } from "..";
 
@@ -55,6 +55,10 @@ export abstract class ErrorMiddlewarePipe extends MiddlewarePipe {
 
     abstract process(): void | Async<void>;
 
+}
+
+export function createPipeBundle(pipe: IPipe): IPipeFactory {
+    return (...args: any[]) => ({ target: pipe, params: args });
 }
 
 function errorNext(step: (context: ControllerContext) => void | Async<void>) {

@@ -14,12 +14,12 @@ import { BaseController, bindContext } from "../controller";
 import { InjectScope } from "../metadata/injectable";
 import { Extensions } from "./extensions";
 import { Reflection } from "../di/reflect";
-import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions, FormDcsType, IMiddlewarePipe, IPipe } from "../metadata";
+import { IRoute, IMethodResult, IMidleware, IResult, IStaticTypedResolver, JsonResultOptions, StringResultOptions, FormDcsType, IMiddlewarePipe, IPipe, IPipeElement, IPipeBundle } from "../metadata";
 import { IBodyParseMetadata } from "../metadata/server";
 import { ConfigContainer } from "../config";
 import { TypedSerializer } from "../utils/bonbons-serialize";
 import { TypeCheck } from "../utils/type-check";
-import { NewXPoweredBy } from "../middlewares";
+import { NewXPoweredBy, MiddlewarePipe } from "../middlewares";
 
 export class ExpressServer {
 
@@ -176,8 +176,17 @@ export class ExpressServer {
             });
     }
 
-    private _resolvePipes(route: IRoute, middlewares: IMidleware[], pipes: IPipe[]) {
-        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware(this.configs)));
+    private _resolvePipes(route: IRoute, middlewares: IMidleware[], pipes: IPipeElement[]) {
+        pipes.forEach(pipe => {
+            if ((<IPipe>pipe).prototype instanceof MiddlewarePipe) {
+                middlewares.push(new (<IPipe>pipe)().toMiddleware(this.configs));
+            } else if (!!(<IPipeBundle>pipe).target) {
+                const { target, params } = <IPipeBundle>pipe;
+                middlewares.push(new target(...params).toMiddleware(this.configs));
+            } else {
+                throw new Error(`resolve pipe element failed : invalid pipe type metadata -> [ ${JSON.stringify(pipe)} ].`);
+            }
+        });
     }
 
     private _selectFuncMethod<T extends typeof BaseController>(method: string) {

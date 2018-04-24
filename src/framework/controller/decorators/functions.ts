@@ -1,5 +1,5 @@
 import { BaseController } from "../controller";
-import { IMidleware, AllowMethod, IMiddlewarePipe, IPipe } from "../../metadata/controller";
+import { IMidleware, AllowMethod, IMiddlewarePipe, IPipe, IPipeElement } from "../../metadata/controller";
 import { Reflection } from "../../di/reflect";
 import { reroute } from "./base";
 import { PARAMS_META_KEY } from "../../metadata/reflect";
@@ -73,7 +73,7 @@ export function Middleware(middlewares: Array<IMidleware>, merge = true) {
  * @param middlewares pipes list
  * @param merge merge pipes list with controller pipes or not, default is true.
  */
-export function Pipes(pipes: Array<IPipe>, merge = true) {
+export function Pipes(pipes: Array<IPipeElement>, merge = true) {
     return function <T extends BaseController | (typeof BaseController)>(target: any, propertyKey?: string) {
         const isConstructor = !!(<any>target).prototype;
         const prototype: BaseController = isConstructor ? (<any>target).prototype : <any>target;
