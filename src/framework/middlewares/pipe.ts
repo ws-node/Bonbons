@@ -3,29 +3,45 @@ import { IMiddlewarePipe, IMiddleware, Async } from "../metadata/controller";
 import { TypeCheck } from "../utils/type-check";
 import { IConfigContainer, Response } from "..";
 
+export class MiddlewareError extends Error {
+    name = "MiddlewareError";
+    constructor(error: string) { super(error); }
+}
+
 export abstract class MiddlewarePipe implements IMiddlewarePipe<ControllerContext> {
 
     protected isError = false;
+    protected isBreak = false;
     protected context: ControllerContext;
+    protected configs: IConfigContainer;
 
     constructor() { }
 
-    abstract transform(configs: IConfigContainer, context: ControllerContext): void | Async<void>;
+    abstract process(): void | Async<void>;
 
     protected throws(error: string) {
-        this.context.errors.add(new Error(error));
+        this.context.errors.add(new MiddlewareError(error));
+    }
+
+    protected break(msg?: any) {
+        this.isBreak = true;
     }
 
     protected sleep(time: number) {
         return new Promise<void>(resolve => setTimeout(resolve, time || 0));
     }
 
+    protected redirect(statuscode: number, path: string) {
+        this.context.redirect(statuscode, path);
+        this.break();
+    }
+
     toMiddleware(configs: IConfigContainer): IMiddleware {
-        const step = (context: ControllerContext) => {
+        return (this.isError ? errorNext : canNext)((context: ControllerContext) => {
             this.context = context;
-            return this.transform.bind(this, configs)(context);
-        };
-        return this.isError ? errorNext(step) : canNext(step);
+            this.configs = configs;
+            this.process.bind(this)();
+        });
     }
 
 }
@@ -37,7 +53,7 @@ export abstract class ErrorMiddlewarePipe extends MiddlewarePipe {
         this.isError = true;
     }
 
-    abstract transform(configs: IConfigContainer, context: ControllerContext): void | Async<void>;
+    abstract process(): void | Async<void>;
 
 }
 

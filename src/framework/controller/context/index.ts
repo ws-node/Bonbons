@@ -42,6 +42,12 @@ export class ControllerContext implements IControllerContext {
         this.errors.stack.push(error);
     }
 
+    public redirect(path: string);
+    public redirect(statuscode: number, path: string);
+    public redirect(...args: (string | number)[]) {
+        this._response.redirect(<any>args[0], <any>args[1]);
+    }
+
     /**
      * Try read a query param from request with key.
      * @param key the query param key

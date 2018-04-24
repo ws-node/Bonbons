@@ -18,7 +18,7 @@ export type IMidleware = ICommonMidleware | IErrorMiddleware;
 export type IMiddleware = IMidleware;
 
 export interface IMiddlewarePipe<TContext> {
-    transform(configs: IConfigContainer, context: TContext): void | Async<void>;
+    process(context?: TContext): void | Async<void>;
     toMiddleware(configs: IConfigContainer): IMiddleware;
 }
 
