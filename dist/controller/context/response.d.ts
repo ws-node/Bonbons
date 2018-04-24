@@ -9,4 +9,6 @@ export declare class HttpResponse {
     private _locals;
     readonly locals: IWritable;
     constructor(_response: Response);
+    redirect(path: string): any;
+    redirect(statuscode: number, path: string): any;
 }

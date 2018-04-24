@@ -1,5 +1,5 @@
 import { BaseController } from "../controller";
-import { IMidleware, AllowMethod, IPipe } from "../../metadata/controller";
+import { IMidleware, AllowMethod, IPipeElement } from "../../metadata/controller";
 /**
  * Define a route method for the controller. default allowed method is 'GET'.
  * @param {string[]} allowMethods
@@ -23,4 +23,4 @@ export declare function Middleware(middlewares: Array<IMidleware>, merge?: boole
  * @param middlewares pipes list
  * @param merge merge pipes list with controller pipes or not, default is true.
  */
-export declare function Pipes(pipes: Array<IPipe>, merge?: boolean): <T extends BaseController | typeof BaseController>(target: any, propertyKey?: string) => void;
+export declare function Pipes(pipes: Array<IPipeElement>, merge?: boolean): <T extends BaseController | typeof BaseController>(target: any, propertyKey?: string) => void;

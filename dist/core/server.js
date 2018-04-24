@@ -107,7 +107,18 @@ class ExpressServer {
         });
     }
     _resolvePipes(route, middlewares, pipes) {
-        pipes.forEach(pipe => middlewares.push(new pipe().toMiddleware(this.configs)));
+        pipes.forEach(pipe => {
+            if (pipe.prototype instanceof middlewares_1.MiddlewarePipe) {
+                middlewares.push(new pipe().toMiddleware(this.configs, { target: pipe, params: [] }));
+            }
+            else if (!!pipe.target) {
+                const { target, params } = pipe;
+                middlewares.push(new target(...params).toMiddleware(this.configs, { target, params }));
+            }
+            else {
+                throw new Error(`resolve pipe element failed : invalid pipe type metadata -> [ ${JSON.stringify(pipe)} ].`);
+            }
+        });
     }
     _selectFuncMethod(method) {
         let invoke;

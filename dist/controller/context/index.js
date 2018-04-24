@@ -28,6 +28,9 @@ class ControllerContext {
     throws(error) {
         this.errors.stack.push(error);
     }
+    redirect(...args) {
+        this._response.redirect(args[0], args[1]);
+    }
     /**
      * Try read a query param from request with key.
      * @param key the query param key

@@ -1,15 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class ReadableSource {
-    constructor(_data, _method) {
-        this._data = _data;
-        this._method = _method;
+    constructor(_data) {
+        this._isFucData = false;
+        if (this._isFucData = (Object.prototype.toString.call(_data) === "[object Function]")) {
+            this._dataIvk = _data;
+        }
+        else {
+            this._data = _data;
+        }
     }
-    get data() {
-        return this._method ?
-            this._data[this._method]() :
-            (this._data || {});
-    }
+    get dataType() { return !!this._isFucData ? 2 : 1; }
+    get data() { return !!this._isFucData ? this._dataIvk() : this._data; }
     get(key, type) {
         return this._transform(this.data, key, type);
     }
@@ -18,6 +20,20 @@ class ReadableSource {
     }
 }
 exports.ReadableSource = ReadableSource;
+class WritableSource extends ReadableSource {
+    constructor(_data, setter) {
+        super(_data);
+        if (setter) {
+            this.set = setter;
+        }
+    }
+    set(key, value) {
+        if (this.dataType === 1) {
+            this.data[key] = value;
+        }
+    }
+}
+exports.WritableSource = WritableSource;
 function convertTo(value, type) {
     if (type && value) {
         try {

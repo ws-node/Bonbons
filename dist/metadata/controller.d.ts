@@ -13,11 +13,20 @@ export declare type ICommonMidleware = (request: Request, response: Response, ne
 export declare type IErrorMiddleware = (error: any, request: Request, response: Response, next?: () => void) => void;
 export declare type IMidleware = ICommonMidleware | IErrorMiddleware;
 export declare type IMiddleware = IMidleware;
+export declare type IMiddlewareConstroctor = IConstructor<IMiddlewarePipe<any>>;
 export interface IMiddlewarePipe<TContext> {
-    transform(configs: IConfigContainer, context: TContext): void | Async<void>;
-    toMiddleware(configs: IConfigContainer): IMiddleware;
+    process(context?: TContext): void | Async<void>;
+    toMiddleware(configs: IConfigContainer, bundle: IPipeBundle): IMiddleware;
 }
 export declare type IPipe = IConstructor<IMiddlewarePipe<any>>;
+export declare type IPipeElement = IPipe | IPipeBundle;
+export interface IPipeBundle {
+    target: IPipe;
+    params: any[];
+}
+export interface IPipeFactory {
+    (...args: any[]): IPipeBundle;
+}
 export interface IContextErrors {
     stack: any[];
     add(error: any): void;
@@ -39,7 +48,7 @@ export interface IRoute {
         merge: boolean;
     };
     pipes: {
-        list: IPipe[];
+        list: IPipeElement[];
         merge: boolean;
     };
     funcParams: Array<{
@@ -76,7 +85,7 @@ export interface IControllerMetadata {
         prefix?: string;
     };
     middlewares: IMidleware[];
-    pipes: IPipe[];
+    pipes: IPipeElement[];
 }
 /**
  * Represents an asynchronous process and is used as an alias for a Promise

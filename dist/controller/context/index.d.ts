@@ -22,6 +22,8 @@ export declare class ControllerContext implements IControllerContext {
     readonly form: IReadable;
     constructor(request: Request, response: Response, errors?: any);
     throws(error: any): void;
+    redirect(path: string): any;
+    redirect(statuscode: number, path: string): any;
     /**
      * Try read a query param from request with key.
      * @param key the query param key
