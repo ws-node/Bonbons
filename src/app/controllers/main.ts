@@ -9,7 +9,7 @@ import {
 } from "../../framework";
 import { SuperService } from "../services/main";
 import { PostModel } from "../models/main.model";
-import { RandomBreak } from "../pipes/new.pipe";
+import { RandomBreak, Authorize } from "../pipes/new.pipe";
 
 @Controller("api")
 @Middleware([middleware01])
@@ -61,9 +61,16 @@ export class MainController extends BaseController {
         return this.toJSON({ value: this.sup.print() });
     }
 
+    @Method("GET")
+    @Route("error401")
+    public page401(): string {
+        return "401 unauthorize.";
+    }
+
     @Method("POST")
     @Route("post/:id/details/:name", ["query", "find"])
     @Middleware([], false)
+    @Pipes([Authorize("useful_token")])
     public POSTIndex(
         id: number,
         name: string,

@@ -17,9 +17,11 @@ export type IErrorMiddleware = (error: any, request: Request, response: Response
 export type IMidleware = ICommonMidleware | IErrorMiddleware;
 export type IMiddleware = IMidleware;
 
+export type IMiddlewareConstroctor = IConstructor<IMiddlewarePipe<any>>;
+
 export interface IMiddlewarePipe<TContext> {
     process(context?: TContext): void | Async<void>;
-    toMiddleware(configs: IConfigContainer): IMiddleware;
+    toMiddleware(configs: IConfigContainer, bundle: IPipeBundle): IMiddleware;
 }
 
 export type IPipe = IConstructor<IMiddlewarePipe<any>>;

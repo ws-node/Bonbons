@@ -1,4 +1,4 @@
-import { MiddlewarePipe, IContext, HttpRequest, HttpResponse, ControllerContext, IConfigContainer } from "../../framework";
+import { MiddlewarePipe, IContext, HttpRequest, HttpResponse, ControllerContext, IConfigContainer, createPipeBundle, IPipeFactory } from "../../framework";
 
 export class RandomBreak extends MiddlewarePipe {
 
@@ -15,3 +15,19 @@ export class RandomBreak extends MiddlewarePipe {
     }
 
 }
+
+export class TokenCheck extends MiddlewarePipe {
+
+    constructor(private token: string) { super(); }
+
+    process(): void | Promise<void> {
+        const tk: string = this.context.request.headers.get("jwt-token");
+        if (!tk || tk !== (this.token || "default_token")) {
+            // this.throws("401 unauthorize");
+            this.redirect(301, "/api/error401");
+        }
+    }
+
+}
+
+export const Authorize: IPipeFactory = createPipeBundle(TokenCheck);

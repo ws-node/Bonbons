@@ -179,10 +179,10 @@ export class ExpressServer {
     private _resolvePipes(route: IRoute, middlewares: IMidleware[], pipes: IPipeElement[]) {
         pipes.forEach(pipe => {
             if ((<IPipe>pipe).prototype instanceof MiddlewarePipe) {
-                middlewares.push(new (<IPipe>pipe)().toMiddleware(this.configs));
+                middlewares.push(new (<IPipe>pipe)().toMiddleware(this.configs, { target: <IPipe>pipe, params: [] }));
             } else if (!!(<IPipeBundle>pipe).target) {
                 const { target, params } = <IPipeBundle>pipe;
-                middlewares.push(new target(...params).toMiddleware(this.configs));
+                middlewares.push(new target(...params).toMiddleware(this.configs, { target, params }));
             } else {
                 throw new Error(`resolve pipe element failed : invalid pipe type metadata -> [ ${JSON.stringify(pipe)} ].`);
             }
