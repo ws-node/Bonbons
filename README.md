@@ -3,7 +3,11 @@
 
 This is an MVC framework based on node.js and express. The framework is created by typescript, which includes a dependency injection system and RESTful high-level abstraction.
 
-The core features are under development. Currently, the dependency injection system is basically completed, the controller module is basically completed, and the GET method is also completed. **Other features are still developing**.
+The core features are under development. Currently, the dependency injection system is basically completed, the controller module is basically completed, and the GET method is also completed. 
+
+**Other features are still developing**.
+
+[More about Bonbons](https://github.com/mogician-notes/blog/issues/3)
 
 ## Installation
 ```powershell
