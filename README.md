@@ -7,7 +7,7 @@ The core features are under development. Currently, the dependency injection sys
 
 **Other features are still developing**.
 
-[More about Bonbons](https://github.com/mogician-notes/blog/issues/3)
+[More about Bonbons](https://github.com/mogician-notes/blog/blob/master/en-US/about_bonbons.md)
 
 ## Installation
 ```powershell
